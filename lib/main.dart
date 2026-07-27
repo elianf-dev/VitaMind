@@ -22,9 +22,10 @@ import 'services/firestore_service.dart';
 import 'services/local_storage_service.dart';
 import 'services/notification_service.dart';
 import 'theme/app_colors.dart';
-import 'theme/app_shadows.dart';
 import 'theme/app_spacing.dart';
 import 'theme/app_theme.dart';
+import 'widgets/app_backdrop.dart';
+import 'widgets/glass_surface.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -89,6 +90,7 @@ class VitaMindApp extends StatelessWidget {
       title: 'VitaMind',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
+      builder: (context, child) => AppBackdrop(child: child!),
       initialRoute: authService.isLoggedIn
           ? onboardingCompleted
                 ? '/dashboard'
@@ -209,7 +211,24 @@ class _VitaMindShellState extends State<VitaMindShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _buildScreens()),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth > 1080
+              ? 1080.0
+              : constraints.maxWidth;
+
+          return Center(
+            child: SizedBox(
+              width: width,
+              height: constraints.maxHeight,
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: _buildScreens(),
+              ),
+            ),
+          );
+        },
+      ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(
           AppSpacing.md,
@@ -217,44 +236,46 @@ class _VitaMindShellState extends State<VitaMindShell> {
           AppSpacing.md,
           AppSpacing.sm,
         ),
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(AppSpacing.radius),
-            border: Border.all(color: AppColors.border),
-            boxShadow: AppShadows.raised(strength: 0.8),
-          ),
-          child: NavigationBar(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: _setSelectedIndex,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: 'Home',
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: GlassSurface(
+              backgroundColor: AppColors.glassStrong,
+              blur: 24,
+              shadowStrength: 0.8,
+              child: NavigationBar(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: _setSelectedIndex,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home),
+                    label: 'Home',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.mood_outlined),
+                    selectedIcon: Icon(Icons.mood),
+                    label: 'Mood',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.edit_note_outlined),
+                    selectedIcon: Icon(Icons.edit_note),
+                    label: 'Journal',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.insights_outlined),
+                    selectedIcon: Icon(Icons.insights),
+                    label: 'Insights',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.person_outline),
+                    selectedIcon: Icon(Icons.person),
+                    label: 'Profile',
+                  ),
+                ],
               ),
-              NavigationDestination(
-                icon: Icon(Icons.mood_outlined),
-                selectedIcon: Icon(Icons.mood),
-                label: 'Mood',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.edit_note_outlined),
-                selectedIcon: Icon(Icons.edit_note),
-                label: 'Journal',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.insights_outlined),
-                selectedIcon: Icon(Icons.insights),
-                label: 'Insights',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person),
-                label: 'Profile',
-              ),
-            ],
+            ),
           ),
         ),
       ),

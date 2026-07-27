@@ -43,7 +43,10 @@ class ProgressGoalCard extends StatelessWidget {
               NeomorphicSurface(
                 width: compact ? 36 : 42,
                 height: compact ? 36 : 42,
-                backgroundColor: primary.withValues(alpha: 0.12),
+                backgroundColor: Color.alphaBlend(
+                  primary.withValues(alpha: 0.12),
+                  AppColors.neoSurface,
+                ),
                 borderColor: primary.withValues(alpha: 0.16),
                 shadowStrength: 0.4,
                 child: Icon(

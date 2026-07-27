@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import 'neomorphic_surface.dart';
+import 'glass_surface.dart';
 
 class VitaMindCard extends StatelessWidget {
   const VitaMindCard({
@@ -11,7 +11,7 @@ class VitaMindCard extends StatelessWidget {
     this.margin = const EdgeInsets.only(bottom: AppSpacing.md),
     this.padding = AppSpacing.card,
     this.borderColor = AppColors.border,
-    this.backgroundColor = AppColors.card,
+    this.backgroundColor = AppColors.glassSurface,
     this.onTap,
   });
 
@@ -24,7 +24,7 @@ class VitaMindCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NeomorphicSurface(
+    return GlassSurface(
       width: double.infinity,
       margin: margin,
       padding: padding,

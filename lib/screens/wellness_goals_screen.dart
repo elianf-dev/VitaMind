@@ -240,6 +240,11 @@ class _WellnessGoalsScreenState extends State<WellnessGoalsScreen> {
                             IconButton.filled(
                               tooltip: 'Add goal',
                               onPressed: _addCustomGoal,
+                              style: IconButton.styleFrom(
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimary,
+                              ),
                               icon: const Icon(Icons.add),
                             ),
                           ],

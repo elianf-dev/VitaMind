@@ -17,7 +17,7 @@ class AppTheme {
         onSecondary: Colors.white,
         error: AppColors.error,
         onError: Colors.white,
-        surface: AppColors.card,
+        surface: AppColors.glassStrong,
         onSurface: AppColors.text,
       ),
     );
@@ -28,15 +28,15 @@ class AppTheme {
     );
 
     return base.copyWith(
-      scaffoldBackgroundColor: AppColors.surface,
-      canvasColor: AppColors.surface,
+      scaffoldBackgroundColor: Colors.transparent,
+      canvasColor: AppColors.glassStrong,
       splashColor: AppColors.primary.withValues(alpha: 0.08),
       highlightColor: AppColors.primary.withValues(alpha: 0.05),
       textTheme: textTheme,
       iconTheme: const IconThemeData(color: AppColors.bodyText),
       appBarTheme: const AppBarTheme(
         centerTitle: false,
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.transparent,
         foregroundColor: AppColors.text,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -48,7 +48,7 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: AppColors.card,
+        color: AppColors.glassStrong,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -77,13 +77,13 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          backgroundColor: AppColors.card,
+          backgroundColor: AppColors.glassStrong,
           foregroundColor: AppColors.primary,
           minimumSize: const Size.fromHeight(52),
           elevation: 2,
           shadowColor: AppColors.shadow,
           surfaceTintColor: Colors.transparent,
-          side: const BorderSide(color: AppColors.border),
+          side: const BorderSide(color: Colors.white70),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.xl,
             vertical: AppSpacing.md,
@@ -106,7 +106,6 @@ class AppTheme {
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
-          foregroundColor: AppColors.bodyText,
           minimumSize: const Size(48, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radius),
@@ -218,14 +217,14 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.card,
+        backgroundColor: AppColors.glassStrong,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radius),
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.glassStrong,
         surfaceTintColor: Colors.transparent,
         showDragHandle: true,
       ),

@@ -339,6 +339,9 @@ class _AddField extends StatelessWidget {
         IconButton.filled(
           tooltip: 'Add',
           onPressed: onAdd,
+          style: IconButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          ),
           icon: const Icon(Icons.add),
         ),
       ],

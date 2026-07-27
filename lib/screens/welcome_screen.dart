@@ -5,6 +5,7 @@ import '../services/local_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/neomorphic_surface.dart';
+import '../widgets/vita_mind_card.dart';
 
 enum _AuthMode { welcome, login, signUp }
 
@@ -150,30 +151,44 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                if (_mode == _AuthMode.welcome)
-                  _WelcomeActions(
-                    onLogin: () => setState(() => _mode = _AuthMode.login),
-                    onSignUp: () => setState(() => _mode = _AuthMode.signUp),
-                    onGuest: _continueAsGuest,
-                    signedInEmail: widget.authService.userEmail,
-                  )
-                else
-                  _AuthForm(
-                    mode: _mode,
-                    emailController: _emailController,
-                    passwordController: _passwordController,
-                    loading: _loading,
-                    message: _message,
-                    firebaseAvailable: widget.authService.firebaseAvailable,
-                    onSubmit: _submitAuth,
-                    onForgotPassword: _resetPassword,
-                    onBack: () {
-                      setState(() {
-                        _mode = _AuthMode.welcome;
-                        _message = null;
-                      });
-                    },
+                VitaMindCard(
+                  margin: EdgeInsets.zero,
+                  padding: AppSpacing.cardLarge,
+                  backgroundColor: AppColors.glassStrong,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    switchInCurve: Curves.easeOut,
+                    switchOutCurve: Curves.easeIn,
+                    child: _mode == _AuthMode.welcome
+                        ? _WelcomeActions(
+                            key: const ValueKey('welcome-actions'),
+                            onLogin: () =>
+                                setState(() => _mode = _AuthMode.login),
+                            onSignUp: () =>
+                                setState(() => _mode = _AuthMode.signUp),
+                            onGuest: _continueAsGuest,
+                            signedInEmail: widget.authService.userEmail,
+                          )
+                        : _AuthForm(
+                            key: ValueKey(_mode),
+                            mode: _mode,
+                            emailController: _emailController,
+                            passwordController: _passwordController,
+                            loading: _loading,
+                            message: _message,
+                            firebaseAvailable:
+                                widget.authService.firebaseAvailable,
+                            onSubmit: _submitAuth,
+                            onForgotPassword: _resetPassword,
+                            onBack: () {
+                              setState(() {
+                                _mode = _AuthMode.welcome;
+                                _message = null;
+                              });
+                            },
+                          ),
                   ),
+                ),
               ],
             ),
           ),
@@ -185,6 +200,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
 class _WelcomeActions extends StatelessWidget {
   const _WelcomeActions({
+    super.key,
     required this.onLogin,
     required this.onSignUp,
     required this.onGuest,
@@ -222,6 +238,7 @@ class _WelcomeActions extends StatelessWidget {
 
 class _AuthForm extends StatelessWidget {
   const _AuthForm({
+    super.key,
     required this.mode,
     required this.emailController,
     required this.passwordController,

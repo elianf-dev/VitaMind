@@ -32,7 +32,9 @@ class MoodOption extends StatelessWidget {
           horizontal: AppSpacing.md,
           vertical: 14,
         ),
-        backgroundColor: selected ? AppColors.primarySoft : AppColors.card,
+        backgroundColor: selected
+            ? AppColors.primarySoft
+            : AppColors.neoSurface,
         borderColor: selected ? colorScheme.primary : AppColors.border,
         shadowStrength: selected ? 0.55 : 0.8,
         onTap: onTap,

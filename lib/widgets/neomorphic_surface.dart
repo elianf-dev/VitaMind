@@ -10,7 +10,7 @@ class NeomorphicSurface extends StatefulWidget {
     required this.child,
     this.margin = EdgeInsets.zero,
     this.padding = EdgeInsets.zero,
-    this.backgroundColor = AppColors.card,
+    this.backgroundColor = AppColors.neoSurface,
     this.borderColor = AppColors.border,
     this.radius = AppSpacing.radius,
     this.width,

@@ -40,7 +40,10 @@ class VitaMindActionCard extends StatelessWidget {
             width: iconSize,
             height: iconSize,
             padding: EdgeInsets.zero,
-            backgroundColor: accentColor.withValues(alpha: 0.12),
+            backgroundColor: Color.alphaBlend(
+              accentColor.withValues(alpha: 0.12),
+              AppColors.neoSurface,
+            ),
             borderColor: accentColor.withValues(alpha: 0.16),
             shadowStrength: 0.45,
             child: Icon(icon, color: accentColor),
