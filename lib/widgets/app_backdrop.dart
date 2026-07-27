@@ -32,6 +32,31 @@ class AppBackdrop extends StatelessWidget {
   }
 }
 
+class GlassPageTransitionsBuilder extends PageTransitionsBuilder {
+  const GlassPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final opacity = Tween<double>(begin: 0.78, end: 1).animate(
+      CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      ),
+    );
+
+    return AppBackdrop(
+      child: FadeTransition(opacity: opacity, child: child),
+    );
+  }
+}
+
 class _AtmosphereVeil extends StatelessWidget {
   const _AtmosphereVeil();
 

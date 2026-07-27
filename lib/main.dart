@@ -89,8 +89,18 @@ class VitaMindApp extends StatelessWidget {
     return MaterialApp(
       title: 'VitaMind',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      builder: (context, child) => AppBackdrop(child: child!),
+      theme: AppTheme.light().copyWith(
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: GlassPageTransitionsBuilder(),
+            TargetPlatform.iOS: GlassPageTransitionsBuilder(),
+            TargetPlatform.macOS: GlassPageTransitionsBuilder(),
+            TargetPlatform.windows: GlassPageTransitionsBuilder(),
+            TargetPlatform.linux: GlassPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: GlassPageTransitionsBuilder(),
+          },
+        ),
+      ),
       initialRoute: authService.isLoggedIn
           ? onboardingCompleted
                 ? '/dashboard'
