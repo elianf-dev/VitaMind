@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import 'neomorphic_surface.dart';
 import 'vita_mind_card.dart';
 
 class VitaMindActionCard extends StatelessWidget {
@@ -35,13 +36,16 @@ class VitaMindActionCard extends StatelessWidget {
       borderColor: accentColor.withValues(alpha: 0.18),
       child: Row(
         children: [
-          Container(
+          NeomorphicSurface(
             width: iconSize,
             height: iconSize,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppSpacing.radius),
+            padding: EdgeInsets.zero,
+            backgroundColor: Color.alphaBlend(
+              accentColor.withValues(alpha: 0.12),
+              AppColors.neoSurface,
             ),
+            borderColor: accentColor.withValues(alpha: 0.16),
+            shadowStrength: 0.45,
             child: Icon(icon, color: accentColor),
           ),
           const SizedBox(width: AppSpacing.lg),

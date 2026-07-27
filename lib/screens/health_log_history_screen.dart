@@ -100,11 +100,11 @@ class _HealthLogEntryCard extends StatelessWidget {
     return VitaMindCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: EdgeInsets.zero,
+      onTap: onTap,
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFFDDF0E9),
+          backgroundColor: AppColors.primarySoft,
           child: Icon(
             Icons.fact_check_outlined,
             color: Theme.of(context).colorScheme.primary,

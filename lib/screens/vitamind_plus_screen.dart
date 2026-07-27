@@ -75,7 +75,7 @@ class VitaMindPlusScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppColors.card,
                     child: Icon(
                       Icons.lock_outline,
                       color: Theme.of(context).colorScheme.primary,

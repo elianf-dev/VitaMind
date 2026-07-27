@@ -206,16 +206,12 @@ class _JournalEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
+    return VitaMindCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(AppSpacing.radius),
-        border: Border.all(color: AppColors.border),
-      ),
+      padding: EdgeInsets.zero,
+      onTap: onTap,
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        onTap: onTap,
         leading: CircleAvatar(
           backgroundColor: AppColors.primarySoft,
           child: Icon(

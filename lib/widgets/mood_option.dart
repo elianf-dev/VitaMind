@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import 'neomorphic_surface.dart';
+
 class MoodOption extends StatelessWidget {
   const MoodOption({
     super.key,
@@ -22,38 +26,32 @@ class MoodOption extends StatelessWidget {
       button: true,
       selected: selected,
       label: label,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+      child: NeomorphicSurface(
+        width: 96,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 14,
+        ),
+        backgroundColor: selected
+            ? AppColors.primarySoft
+            : AppColors.neoSurface,
+        borderColor: selected ? colorScheme.primary : AppColors.border,
+        shadowStrength: selected ? 0.55 : 0.8,
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          width: 96,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          decoration: BoxDecoration(
-            color: selected ? const Color(0xFFDDF0E9) : Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: selected ? colorScheme.primary : const Color(0xFFD9E8E2),
-              width: selected ? 1.6 : 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 30)),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: selected
-                      ? colorScheme.primary
-                      : const Color(0xFF34534B),
-                  fontWeight: FontWeight.w700,
-                ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 30)),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: selected ? colorScheme.primary : AppColors.bodyText,
+                fontWeight: FontWeight.w700,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

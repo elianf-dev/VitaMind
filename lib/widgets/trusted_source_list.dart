@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/trusted_health_source.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import 'vita_mind_card.dart';
 
 class TrustedSourceList extends StatelessWidget {
   const TrustedSourceList({super.key, required this.sources});
@@ -32,72 +33,59 @@ class TrustedSourceList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (final source in sources)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: Material(
-              color: const Color(0xFFF7FBF9),
-              borderRadius: BorderRadius.circular(12),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: source.url.trim().isEmpty
-                    ? null
-                    : () => _openSource(context, source.url),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFD9EAE4)),
-                  ),
-                  child: Row(
+          VitaMindCard(
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            backgroundColor: AppColors.primaryMist,
+            onTap: source.url.trim().isEmpty
+                ? null
+                : () => _openSource(context, source.url),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.open_in_new_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.open_in_new_outlined,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              source.title,
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: AppColors.text,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              source.organization,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(source.description),
-                            if (source.url.trim().isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                source.url,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: AppColors.mutedText,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ],
-                          ],
+                      Text(
+                        source.title,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.text,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
+                      const SizedBox(height: 3),
+                      Text(
+                        source.organization,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(source.description),
+                      if (source.url.trim().isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          source.url,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: AppColors.mutedText,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
           ),
       ],

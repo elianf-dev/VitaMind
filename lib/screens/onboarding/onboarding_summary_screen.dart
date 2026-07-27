@@ -6,6 +6,10 @@ import '../../models/privacy_security_settings.dart';
 import '../../models/wellness_goal.dart';
 import '../../services/local_storage_service.dart';
 import '../../services/notification_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../widgets/disclaimer_card.dart';
+import '../../widgets/vita_mind_card.dart';
 
 class OnboardingSummaryScreen extends StatefulWidget {
   const OnboardingSummaryScreen({
@@ -132,7 +136,7 @@ class _OnboardingSummaryScreenState extends State<OnboardingSummaryScreen> {
                         : 'Consent is off. The free Health Log Explainer still works.',
                   ),
                   const SizedBox(height: 10),
-                  const _DisclaimerCard(),
+                  const DisclaimerCard(),
                   const SizedBox(height: 18),
                   FilledButton.icon(
                     onPressed: _finishing ? null : _finishOnboarding,
@@ -172,14 +176,9 @@ class _SummaryCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final primary = Theme.of(context).colorScheme.primary;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFD9E8E2)),
-      ),
+    return VitaMindCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -192,7 +191,7 @@ class _SummaryCard extends StatelessWidget {
                 Text(
                   title,
                   style: textTheme.titleMedium?.copyWith(
-                    color: const Color(0xFF173B35),
+                    color: AppColors.text,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -200,7 +199,7 @@ class _SummaryCard extends StatelessWidget {
                 Text(
                   value,
                   style: textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF5E746D),
+                    color: AppColors.mutedText,
                     height: 1.35,
                   ),
                 ),
@@ -208,26 +207,6 @@ class _SummaryCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DisclaimerCard extends StatelessWidget {
-  const _DisclaimerCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E8),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFEAD8A8)),
-      ),
-      child: const Text(
-        'This is not medical advice or a diagnosis.',
-        style: TextStyle(color: Color(0xFF6E5A28), fontWeight: FontWeight.w800),
       ),
     );
   }

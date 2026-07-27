@@ -191,10 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   title: 'Log mood',
                   subtitle: 'Quick mood check',
                   accentColor: AppColors.primary,
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.mutedIcon,
-                  ),
                   onTap: () => widget.onNavigate(1),
                 ),
               ),
@@ -206,10 +202,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   title: 'Log symptoms',
                   subtitle: 'Track severity',
                   accentColor: AppColors.blue,
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.mutedIcon,
-                  ),
                   onTap: () => Navigator.of(context).pushNamed('/symptoms'),
                 ),
               ),
