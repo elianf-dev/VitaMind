@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "494081190035",
+    "project_id": "vitamind-9d46b",
+    "storage_bucket": "vitamind-9d46b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494081190035:android:f7382e309cd95d99590566",
+        "android_client_info": {
+          "package_name": "com.elianfigueroa.vitamind"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKX-Li4zQbqVtNy2Iu1eKfyiHjT4LJqVQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494081190035:android:2a5683332316a7b6590566",
+        "android_client_info": {
+          "package_name": "com.example.vitamind"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKX-Li4zQbqVtNy2Iu1eKfyiHjT4LJqVQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
