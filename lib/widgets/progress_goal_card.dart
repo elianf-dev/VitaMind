@@ -4,6 +4,7 @@ import '../models/wellness_goal.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import 'neomorphic_surface.dart';
 import 'vita_mind_card.dart';
 
 class ProgressGoalCard extends StatelessWidget {
@@ -39,13 +40,12 @@ class ProgressGoalCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
+              NeomorphicSurface(
                 width: compact ? 36 : 42,
                 height: compact ? 36 : 42,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radius),
-                ),
+                backgroundColor: primary.withValues(alpha: 0.12),
+                borderColor: primary.withValues(alpha: 0.16),
+                shadowStrength: 0.4,
                 child: Icon(
                   Icons.flag_outlined,
                   color: goal.active ? primary : AppColors.disabled,

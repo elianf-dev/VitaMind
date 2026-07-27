@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import 'neomorphic_surface.dart';
 
 class VitaMindCard extends StatelessWidget {
   const VitaMindCard({
@@ -23,29 +24,14 @@ class VitaMindCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Container(
+    return NeomorphicSurface(
       width: double.infinity,
       margin: margin,
       padding: padding,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(AppSpacing.radius),
-        border: Border.all(color: borderColor),
-      ),
+      backgroundColor: backgroundColor,
+      borderColor: borderColor,
+      onTap: onTap,
       child: child,
-    );
-
-    if (onTap == null) {
-      return content;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppSpacing.radius),
-        onTap: onTap,
-        child: content,
-      ),
     );
   }
 }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../services/local_storage_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../widgets/neomorphic_surface.dart';
 
 enum _AuthMode { welcome, login, signUp }
 
@@ -105,69 +108,75 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            const SizedBox(height: 64),
-            Center(
-              child: Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDDF0E9),
-                  borderRadius: BorderRadius.circular(24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                const SizedBox(height: 64),
+                const Center(
+                  child: NeomorphicSurface(
+                    width: 88,
+                    height: 88,
+                    alignment: Alignment.center,
+                    backgroundColor: AppColors.primarySoft,
+                    borderColor: AppColors.primarySoft,
+                    radius: 24,
+                    shadowStrength: 1.1,
+                    child: Icon(
+                      Icons.self_improvement,
+                      color: AppColors.primary,
+                      size: 46,
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.self_improvement,
-                  color: Color(0xFF2F8F7B),
-                  size: 46,
+                const SizedBox(height: 24),
+                Text(
+                  'VitaMind',
+                  textAlign: TextAlign.center,
+                  style: textTheme.displaySmall?.copyWith(
+                    color: AppColors.text,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                Text(
+                  'Track your mood, symptoms, and wellness habits.',
+                  textAlign: TextAlign.center,
+                  style: textTheme.titleMedium?.copyWith(
+                    color: AppColors.mutedText,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                if (_mode == _AuthMode.welcome)
+                  _WelcomeActions(
+                    onLogin: () => setState(() => _mode = _AuthMode.login),
+                    onSignUp: () => setState(() => _mode = _AuthMode.signUp),
+                    onGuest: _continueAsGuest,
+                    signedInEmail: widget.authService.userEmail,
+                  )
+                else
+                  _AuthForm(
+                    mode: _mode,
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    loading: _loading,
+                    message: _message,
+                    firebaseAvailable: widget.authService.firebaseAvailable,
+                    onSubmit: _submitAuth,
+                    onForgotPassword: _resetPassword,
+                    onBack: () {
+                      setState(() {
+                        _mode = _AuthMode.welcome;
+                        _message = null;
+                      });
+                    },
+                  ),
+              ],
             ),
-            const SizedBox(height: 24),
-            Text(
-              'VitaMind',
-              textAlign: TextAlign.center,
-              style: textTheme.displaySmall?.copyWith(
-                color: const Color(0xFF173B35),
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Track your mood, symptoms, and wellness habits.',
-              textAlign: TextAlign.center,
-              style: textTheme.titleMedium?.copyWith(
-                color: const Color(0xFF5E746D),
-                height: 1.35,
-              ),
-            ),
-            const SizedBox(height: 40),
-            if (_mode == _AuthMode.welcome)
-              _WelcomeActions(
-                onLogin: () => setState(() => _mode = _AuthMode.login),
-                onSignUp: () => setState(() => _mode = _AuthMode.signUp),
-                onGuest: _continueAsGuest,
-                signedInEmail: widget.authService.userEmail,
-              )
-            else
-              _AuthForm(
-                mode: _mode,
-                emailController: _emailController,
-                passwordController: _passwordController,
-                loading: _loading,
-                message: _message,
-                firebaseAvailable: widget.authService.firebaseAvailable,
-                onSubmit: _submitAuth,
-                onForgotPassword: _resetPassword,
-                onBack: () {
-                  setState(() {
-                    _mode = _AuthMode.welcome;
-                    _message = null;
-                  });
-                },
-              ),
-          ],
+          ),
         ),
       ),
     );
@@ -195,7 +204,7 @@ class _WelcomeActions extends StatelessWidget {
           Text(
             'Signed in as $signedInEmail',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF5E746D),
+              color: AppColors.mutedText,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -244,7 +253,7 @@ class _AuthForm extends StatelessWidget {
         Text(
           isLogin ? 'Login' : 'Create account',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: const Color(0xFF173B35),
+            color: AppColors.text,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -313,13 +322,11 @@ class _AuthMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E8),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFEAD8A8)),
-      ),
+    return NeomorphicSurface(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      backgroundColor: AppColors.warningSurface,
+      borderColor: AppColors.warningBorder,
+      shadowStrength: 0.45,
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
