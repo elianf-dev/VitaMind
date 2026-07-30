@@ -85,7 +85,8 @@ class _SymptomTrackerScreenState extends State<SymptomTrackerScreen> {
                     widget.firestoreService.saveSymptomEntry(userId, entry),
               ),
         );
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to sync symptom entries: $error');
         // Keep the tracker usable if Firestore is offline or rules need work.
       }
     }
@@ -129,7 +130,8 @@ class _SymptomTrackerScreenState extends State<SymptomTrackerScreen> {
     if (userId != null && widget.firestoreService.enabled) {
       try {
         await widget.firestoreService.saveSymptomEntry(userId, entry);
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to save symptom entry to cloud: $error');
         if (!mounted) {
           return;
         }

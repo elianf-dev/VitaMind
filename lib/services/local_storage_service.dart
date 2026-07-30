@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/health_log_entry.dart';
@@ -143,7 +144,8 @@ class LocalStorageService {
     try {
       final decoded = jsonDecode(json) as Map<String, dynamic>;
       return CheckInSettings.fromJson(decoded);
-    } on Object {
+    } on Object catch (error) {
+      debugPrint('VitaMind: malformed saved check-in settings: $error');
       return CheckInSettings.defaults();
     }
   }
@@ -196,7 +198,8 @@ class LocalStorageService {
     try {
       final decoded = jsonDecode(json) as Map<String, dynamic>;
       return PrivacySecuritySettings.fromJson(decoded);
-    } on Object {
+    } on Object catch (error) {
+      debugPrint('VitaMind: malformed saved privacy settings: $error');
       return PrivacySecuritySettings.defaults();
     }
   }
@@ -302,7 +305,8 @@ class LocalStorageService {
           .whereType<Map<dynamic, dynamic>>()
           .map((item) => Map<String, dynamic>.from(item))
           .toList();
-    } on Object {
+    } on Object catch (error) {
+      debugPrint('VitaMind: malformed saved record list: $error');
       return [];
     }
   }
@@ -315,7 +319,8 @@ class LocalStorageService {
     for (final item in _decodeList(json)) {
       try {
         models.add(fromJson(item));
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: dropped malformed saved record: $error');
         // Keep valid records usable if an older or damaged record is malformed.
       }
     }
@@ -334,7 +339,8 @@ class LocalStorageService {
           .map((item) => item.trim())
           .where((item) => item.isNotEmpty)
           .toList();
-    } on Object {
+    } on Object catch (error) {
+      debugPrint('VitaMind: malformed saved string list: $error');
       return [];
     }
   }

@@ -49,7 +49,8 @@ Future<void> main() async {
       checkInSettings =
           await firestoreService.loadCheckInSettings(userId) ?? checkInSettings;
       await localStorageService.saveCheckInSettings(checkInSettings);
-    } on Object {
+    } on Object catch (error) {
+      debugPrint('VitaMind: failed to load cloud check-in settings: $error');
       // Keep the local schedule usable if Firestore is unreachable.
     }
   }

@@ -59,7 +59,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             await widget.firestoreService.loadCheckInSettings(userId) ??
             localSettings;
         await widget.localStorageService.saveCheckInSettings(settings);
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to load cloud check-in settings: $error');
         settings = localSettings;
       }
     }
@@ -148,39 +149,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
+    // Firestore rules only allow this user to delete users/{userId} while
+    // still authenticated, so cloud data must be wiped before the Firebase
+    // Auth account (which signs the user out). If deleteAccount fails after
+    // this, the cloud wipe is not silently lost: the user is told exactly
+    // what happened so a retry is safe (deleteUserData is idempotent).
     try {
       await widget.firestoreService.deleteUserData(userId);
-      final error = await widget.authService.deleteAccount();
-      if (error != null) {
-        if (!mounted) {
-          return;
-        }
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error)));
-        return;
-      }
-
-      await widget.localStorageService.clearLocalHealthData();
-      await widget.notificationService.cancelAllCheckIns();
-      widget.localStorageService.setProfileId(null);
-
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-    } on Object {
+    } on Object catch (error) {
+      debugPrint('VitaMind: failed to delete cloud data for $userId: $error');
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'The account could not be deleted. Check your connection and try again.',
+            'Could not reach the server to delete your cloud data. Check your connection and try again.',
           ),
         ),
       );
+      return;
     }
+
+    final error = await widget.authService.deleteAccount();
+    if (error != null) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Your cloud data was deleted, but the account itself could not be removed: $error Please try again.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await widget.localStorageService.clearLocalHealthData();
+    await widget.notificationService.cancelAllCheckIns();
+    widget.localStorageService.setProfileId(null);
+
+    if (!mounted) {
+      return;
+    }
+    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
   }
 
   Future<void> _updateCheckInSettings(CheckInSettings settings) async {
@@ -195,7 +208,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (userId != null && widget.firestoreService.enabled) {
       try {
         await widget.firestoreService.saveCheckInSettings(userId, settings);
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to sync check-in settings: $error');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

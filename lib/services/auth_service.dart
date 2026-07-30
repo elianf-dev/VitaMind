@@ -57,6 +57,9 @@ class AuthService extends ChangeNotifier {
         error,
         fallback: 'Unable to log in. Please try again.',
       );
+    } on Object catch (error) {
+      debugPrint('VitaMind: sign-in failed: $error');
+      return 'Something went wrong. Please check your connection and try again.';
     }
   }
 
@@ -84,6 +87,9 @@ class AuthService extends ChangeNotifier {
         error,
         fallback: 'Unable to create an account. Please try again.',
       );
+    } on Object catch (error) {
+      debugPrint('VitaMind: sign-up failed: $error');
+      return 'Something went wrong. Please check your connection and try again.';
     }
   }
 
@@ -103,6 +109,9 @@ class AuthService extends ChangeNotifier {
         error,
         fallback: 'Unable to send a password reset email.',
       );
+    } on Object catch (error) {
+      debugPrint('VitaMind: password reset email failed: $error');
+      return 'Something went wrong. Please check your connection and try again.';
     }
   }
 
@@ -122,6 +131,9 @@ class AuthService extends ChangeNotifier {
         error,
         fallback: 'Unable to send a verification email.',
       );
+    } on Object catch (error) {
+      debugPrint('VitaMind: resend verification email failed: $error');
+      return 'Something went wrong. Please check your connection and try again.';
     }
   }
 
@@ -138,6 +150,9 @@ class AuthService extends ChangeNotifier {
       return null;
     } on FirebaseAuthException catch (error) {
       return _friendlyError(error, fallback: 'Unable to delete the account.');
+    } on Object catch (error) {
+      debugPrint('VitaMind: account deletion failed: $error');
+      return 'Something went wrong. Please check your connection and try again.';
     }
   }
 

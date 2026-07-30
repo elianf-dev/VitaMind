@@ -62,7 +62,8 @@ class NotificationService {
     try {
       await _notifications.initialize(settings: initializationSettings);
       _available = true;
-    } on Object {
+    } on Object catch (error) {
+      debugPrint('VitaMind: notification plugin failed to initialize: $error');
       _available = false;
     }
 
@@ -127,14 +128,18 @@ class NotificationService {
             date: _nextInstanceOfTime(settings.time),
             matchComponents: DateTimeComponents.time,
           );
-        } on Object {
+        } on Object catch (error) {
+          debugPrint('VitaMind: failed to schedule daily check-in: $error');
           _available = false;
         }
         break;
       case CheckInFrequency.everyOtherDay:
         try {
           await _scheduleEveryOtherDay(settings.time);
-        } on Object {
+        } on Object catch (error) {
+          debugPrint(
+            'VitaMind: failed to schedule every-other-day check-in: $error',
+          );
           _available = false;
         }
         break;
@@ -145,7 +150,8 @@ class NotificationService {
             date: _nextInstanceOfTime(settings.time),
             matchComponents: DateTimeComponents.dayOfWeekAndTime,
           );
-        } on Object {
+        } on Object catch (error) {
+          debugPrint('VitaMind: failed to schedule weekly check-in: $error');
           _available = false;
         }
         break;
@@ -185,7 +191,8 @@ class NotificationService {
         payload: 'test_check_in',
       );
       return true;
-    } on Object {
+    } on Object catch (error) {
+      debugPrint('VitaMind: failed to show test check-in: $error');
       _available = false;
       return false;
     }
@@ -195,7 +202,8 @@ class NotificationService {
     try {
       final timeZone = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(timeZone.identifier));
-    } on Object {
+    } on Object catch (error) {
+      debugPrint('VitaMind: failed to resolve local time zone: $error');
       tz.setLocalLocation(tz.UTC);
     }
   }

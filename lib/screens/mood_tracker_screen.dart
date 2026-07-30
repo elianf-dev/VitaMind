@@ -86,7 +86,8 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
                 (entry) => widget.firestoreService.saveMoodEntry(userId, entry),
               ),
         );
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to sync mood entries: $error');
         // Keep the tracker usable if Firestore is offline or rules need work.
       }
     }
@@ -122,7 +123,8 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
     if (userId != null && widget.firestoreService.enabled) {
       try {
         await widget.firestoreService.saveMoodEntry(userId, entry);
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to save mood entry to cloud: $error');
         if (!mounted) {
           return;
         }

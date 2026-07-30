@@ -79,7 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (userId != null && widget.firestoreService.enabled) {
       try {
         await widget.firestoreService.saveCheckInSettings(userId, settings);
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to sync check-in settings: $error');
         // Local settings remain the source of truth until cloud sync recovers.
       }
     }

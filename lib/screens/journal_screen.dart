@@ -72,7 +72,8 @@ class _JournalScreenState extends State<JournalScreen> {
                     widget.firestoreService.saveJournalEntry(userId, entry),
               ),
         );
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to sync journal entries: $error');
         // Keep the journal usable if Firestore is offline or rules need work.
       }
     }
@@ -111,7 +112,8 @@ class _JournalScreenState extends State<JournalScreen> {
     if (userId != null && widget.firestoreService.enabled) {
       try {
         await widget.firestoreService.saveJournalEntry(userId, entry);
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to save journal entry to cloud: $error');
         if (!mounted) {
           return;
         }

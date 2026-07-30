@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/check_in_settings.dart';
 import '../models/journal_entry.dart';
@@ -168,7 +169,8 @@ class FirestoreService {
     for (final document in documents) {
       try {
         models.add(fromJson(document));
-      } on Object {
+      } on Object catch (error) {
+        debugPrint('VitaMind: dropped malformed cloud record: $error');
         // One malformed cloud record should not hide the user's valid history.
       }
     }
