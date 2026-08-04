@@ -44,4 +44,34 @@ class AppTextStyles {
       fontWeight: FontWeight.w700,
     );
   }
+
+  static const String displayFontFamily = 'Fraunces';
+
+  static TextStyle display({
+    required double size,
+    FontWeight weight = FontWeight.w600,
+    Color color = AppColors.text,
+    double height = 1.05,
+    FontStyle style = FontStyle.normal,
+  }) {
+    return TextStyle(
+      fontFamily: displayFontFamily,
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+      height: height,
+      letterSpacing: size * -0.015,
+      fontStyle: style,
+    );
+  }
+
+  static TextStyle eyebrow({Color color = AppColors.mutedText, double size = 11}) {
+    return TextStyle(
+      fontFamily: 'Inter',
+      fontSize: size,
+      fontWeight: FontWeight.w700,
+      letterSpacing: size * 0.14,
+      color: color,
+    );
+  }
 }

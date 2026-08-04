@@ -11,6 +11,10 @@ class AppSpacing {
   static const double xxl = 24;
   static const double pageBottom = 28;
   static const double radius = 8;
+  static const double tileRadius = 16;
+  static const double cardRadius = 22;
+  static const double dialogRadius = 28;
+  static const double pillRadius = 999;
 
   static const EdgeInsets page = EdgeInsets.fromLTRB(xl, md, xl, pageBottom);
   static const EdgeInsets tabPage = EdgeInsets.fromLTRB(xl, xl, xl, pageBottom);

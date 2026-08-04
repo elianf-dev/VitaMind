@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 
 import '../models/check_in_settings.dart';
 import '../models/diagnosed_condition.dart';
@@ -145,7 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final activeGoals = _goals.where((goal) => goal.active).take(2).toList();
     final conditionSummary = _conditionSummary();
 
@@ -160,23 +160,20 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${_greeting()}, friend',
-                  style: AppTextStyles.pageTitle(context),
-                ),
+                Text(_todayLabel(), style: AppTextStyles.eyebrow(color: AppColors.primary)),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  _todayLabel(),
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: AppColors.mutedText,
-                  ),
+                  '${_greeting()}, friend.',
+                  style: AppTextStyles.display(size: 26),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
                   'Start with one quick check-in.',
-                  style: textTheme.titleMedium?.copyWith(
-                    color: AppColors.text,
-                    fontWeight: FontWeight.w800,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 15,
+                    height: 1.4,
+                    color: AppColors.bodyText,
                   ),
                 ),
               ],
@@ -188,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: VitaMindActionCard(
                   compact: true,
-                  icon: Icons.mood_outlined,
+                  icon: LucideIcons.smile,
                   title: 'Log mood',
                   subtitle: 'Quick mood check',
                   accentColor: AppColors.primary,
@@ -199,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: VitaMindActionCard(
                   compact: true,
-                  icon: Icons.monitor_heart_outlined,
+                  icon: LucideIcons.activity,
                   title: 'Log symptoms',
                   subtitle: 'Track severity',
                   accentColor: AppColors.blue,
@@ -232,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
           const AppSectionHeader(title: 'Today'),
           VitaMindActionCard(
-            icon: Icons.edit_note_outlined,
+            icon: LucideIcons.pencil,
             title: 'Journal',
             subtitle: 'Write a thought, pattern, or small win.',
             accentColor: AppColors.purple,
@@ -243,8 +240,8 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () => widget.onNavigate(2),
           ),
           VitaMindActionCard(
-            icon: Icons.notifications_active_outlined,
-            title: 'Reminders',
+            icon: LucideIcons.bell,
+            title: 'Gentle check-ins',
             subtitle: _checkInSettings.enabled
                 ? '${_checkInSettings.frequency.label} check-in at ${_checkInSettings.time.format(context)} for mood, journal, symptoms, or goals.'
                 : 'Gentle check-ins are turned off.',
@@ -257,10 +254,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           VitaMindActionCard(
-            icon: Icons.fact_check_outlined,
+            icon: LucideIcons.square_check,
             title: 'Health Log Explainer',
-            subtitle: 'Rule-based tips with trusted source links.',
-            accentColor: AppColors.primary,
+            subtitle: 'Plain-language notes with trusted sources.',
+            accentColor: AppColors.coral,
             trailing: const Icon(
               Icons.chevron_right,
               color: AppColors.mutedIcon,
@@ -269,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.of(context).pushNamed('/health-log-explainer'),
           ),
           VitaMindActionCard(
-            icon: Icons.insights_outlined,
+            icon: LucideIcons.trending_up,
             title: 'Insights',
             subtitle: 'Review simple patterns from your local logs.',
             accentColor: AppColors.blue,

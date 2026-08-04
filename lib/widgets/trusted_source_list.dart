@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/trusted_health_source.dart';
@@ -44,7 +45,7 @@ class TrustedSourceList extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(
-                  Icons.open_in_new_outlined,
+                  LucideIcons.external_link,
                   color: AppColors.primary,
                   size: 20,
                 ),

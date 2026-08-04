@@ -16,6 +16,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_local_notifications: ^22.2.0
+  flutter_lucide: ^1.11.0
   flutter_secure_storage: ^10.3.1
   flutter_timezone: ^5.1.0
   hive_ce_flutter: ^2.3.4
@@ -34,3 +35,30 @@ flutter:
     # Re-enable Swift Package Manager after upgrading Xcode.
     enable-swift-package-manager: false
   uses-material-design: true
+  fonts:
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces-Variable.ttf
+          weight: 500
+        - asset: assets/fonts/Fraunces-Variable.ttf
+          weight: 600
+        - asset: assets/fonts/Fraunces-Variable.ttf
+          weight: 700
+        - asset: assets/fonts/Fraunces-Italic-Variable.ttf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/Fraunces-Italic-Variable.ttf
+          weight: 600
+          style: italic
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Variable.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-Variable.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Variable.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-Variable.ttf
+          weight: 800

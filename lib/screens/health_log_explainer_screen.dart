@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 
 import '../models/health_log_entry.dart';
 import '../models/health_log_request.dart';
@@ -14,7 +15,6 @@ import '../widgets/app_section_header.dart';
 import '../widgets/disclaimer_card.dart';
 import '../widgets/vita_mind_buttons.dart';
 import '../widgets/vita_mind_card.dart';
-import '../widgets/vita_mind_page_header.dart';
 import '../widgets/trusted_source_list.dart';
 
 class HealthLogExplainerScreen extends StatefulWidget {
@@ -140,10 +140,27 @@ class _HealthLogExplainerScreenState extends State<HealthLogExplainerScreen> {
             : ListView(
                 padding: AppSpacing.page,
                 children: [
-                  const VitaMindPageHeader(
-                    title: 'Understand your health log',
-                    subtitle:
-                        'Enter symptoms, context, and notes. VitaMind will use safe rules and trusted source links to help you track patterns.',
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'AI Explainer',
+                          style: AppTextStyles.eyebrow(color: AppColors.coral),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Understand your health log',
+                          style: AppTextStyles.display(size: 20),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'Enter symptoms, context, and notes. VitaMind will use safe rules and trusted source links to help you track patterns.',
+                          style: AppTextStyles.supportiveBody(context),
+                        ),
+                      ],
+                    ),
                   ),
                   const DisclaimerCard(
                     text:
@@ -275,12 +292,8 @@ class _HealthResultCards extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _ResultCard(
-          icon: Icons.summarize_outlined,
-          title: 'Plain-language summary',
-          color: AppColors.primary,
-          child: Text(response.summary),
-        ),
+        _PrimaryExplainerCard(summary: response.summary),
+        const SizedBox(height: AppSpacing.md),
         _ResultCard(
           icon: Icons.lightbulb_outline,
           title: 'Related tracked conditions',
@@ -334,6 +347,46 @@ class _HealthResultCards extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PrimaryExplainerCard extends StatelessWidget {
+  const _PrimaryExplainerCard({required this.summary});
+
+  final String summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return VitaMindCard(
+      margin: EdgeInsets.zero,
+      padding: AppSpacing.cardLarge,
+      backgroundColor: const Color(0xFFFAF6F0),
+      borderColor: AppColors.coral.withValues(alpha: 0.14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.sun, color: AppColors.coral, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'In plain language',
+                style: AppTextStyles.eyebrow(color: AppColors.coral),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            summary,
+            style: AppTextStyles.display(
+              size: 19,
+              weight: FontWeight.w500,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

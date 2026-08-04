@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vitamind/models/diagnosed_condition.dart';
@@ -32,13 +33,13 @@ void main() {
 
     expect(find.text('VitaMind'), findsOneWidget);
     expect(
-      find.text('Track your mood, symptoms, and wellness habits.'),
+      find.text('Your health, explained.', findRichText: true),
       findsOneWidget,
     );
-    expect(find.byIcon(Icons.self_improvement), findsOneWidget);
-    expect(find.text('Login'), findsOneWidget);
-    expect(find.text('Sign Up'), findsOneWidget);
-    expect(find.text('Continue as Guest'), findsOneWidget);
+    expect(find.byIcon(LucideIcons.brain_cog), findsOneWidget);
+    expect(find.text('Log in'), findsOneWidget);
+    expect(find.text('Sign up'), findsOneWidget);
+    expect(find.text('Continue as guest'), findsOneWidget);
   });
 
   test(

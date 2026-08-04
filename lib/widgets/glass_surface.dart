@@ -14,7 +14,7 @@ class GlassSurface extends StatefulWidget {
     this.padding = EdgeInsets.zero,
     this.backgroundColor = AppColors.glassSurface,
     this.borderColor = AppColors.border,
-    this.radius = AppSpacing.radius,
+    this.radius = AppSpacing.cardRadius,
     this.width,
     this.height,
     this.alignment,
