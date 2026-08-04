@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 
 import '../services/auth_service.dart';
 import '../services/local_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 import '../widgets/neomorphic_surface.dart';
 import '../widgets/vita_mind_card.dart';
 
@@ -105,8 +107,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -123,10 +123,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     alignment: Alignment.center,
                     backgroundColor: AppColors.primarySoft,
                     borderColor: AppColors.primarySoft,
-                    radius: 24,
                     shadowStrength: 1.1,
                     child: Icon(
-                      Icons.self_improvement,
+                      LucideIcons.brain_cog,
                       color: AppColors.primary,
                       size: 46,
                     ),
@@ -136,19 +135,32 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 Text(
                   'VitaMind',
                   textAlign: TextAlign.center,
-                  style: textTheme.displaySmall?.copyWith(
-                    color: AppColors.text,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: AppTextStyles.display(size: 32),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'Track your mood, symptoms, and wellness habits.',
-                  textAlign: TextAlign.center,
-                  style: textTheme.titleMedium?.copyWith(
-                    color: AppColors.mutedText,
-                    height: 1.35,
+                const SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 17,
+                      height: 1.4,
+                      color: AppColors.mutedText,
+                    ),
+                    children: [
+                      const TextSpan(text: 'Your health, '),
+                      TextSpan(
+                        text: 'explained.',
+                        style: AppTextStyles.display(
+                          size: 17,
+                          weight: FontWeight.w500,
+                          color: AppColors.primary,
+                          height: 1.4,
+                          style: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
                 VitaMindCard(
@@ -189,6 +201,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ),
                   ),
                 ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Guest data lives on your device, encrypted.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    height: 1.4,
+                    color: AppColors.mutedText,
+                  ),
+                ),
               ],
             ),
           ),
@@ -215,7 +238,20 @@ class _WelcomeActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text('Welcome back.', style: AppTextStyles.display(size: 20)),
+        const SizedBox(height: 6),
+        const Text(
+          'Track mood, symptoms, and what your doctor actually said — in your own words.',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14,
+            height: 1.45,
+            color: AppColors.mutedText,
+          ),
+        ),
+        const SizedBox(height: 18),
         if (signedInEmail != null) ...[
           Text(
             'Signed in as $signedInEmail',
@@ -226,11 +262,18 @@ class _WelcomeActions extends StatelessWidget {
           ),
           const SizedBox(height: 12),
         ],
-        FilledButton(onPressed: onLogin, child: const Text('Login')),
-        const SizedBox(height: 12),
-        OutlinedButton(onPressed: onSignUp, child: const Text('Sign Up')),
-        const SizedBox(height: 12),
-        TextButton(onPressed: onGuest, child: const Text('Continue as Guest')),
+        FilledButton.icon(
+          onPressed: onLogin,
+          icon: const Icon(LucideIcons.chevron_right),
+          label: const Text('Log in'),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton(onPressed: onSignUp, child: const Text('Sign up')),
+        const SizedBox(height: 10),
+        TextButton(
+          onPressed: onGuest,
+          child: const Text('Continue as guest'),
+        ),
       ],
     );
   }

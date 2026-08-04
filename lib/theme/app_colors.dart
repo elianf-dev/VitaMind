@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 class AppColors {
   const AppColors._();
 
-  static const Color primary = Color(0xFF2F786C);
-  static const Color primaryPressed = Color(0xFF235F56);
+  static const Color primary = Color(0xFF0E6E7C);
+  static const Color primaryPressed = Color(0xFF0A5762);
   static const Color primarySoft = Color(0xFFD1E8E1);
   static const Color primaryMist = Color(0xBFE1EFEA);
   static const Color secondary = Color(0xFFB96F76);
+  static const Color sage = Color(0xFFA9C9A4);
   static const Color backgroundStart = Color(0xFFE3F0EB);
   static const Color backgroundMiddle = Color(0xFFE9EEF6);
   static const Color backgroundEnd = Color(0xFFF5E8EB);
@@ -34,7 +35,7 @@ class AppColors {
   static const Color blueSoft = Color(0xD9DCE8F2);
   static const Color purple = Color(0xFF8E74A6);
   static const Color purpleSoft = Color(0xD9E9E0EF);
-  static const Color coral = Color(0xFFC97A73);
+  static const Color coral = Color(0xFFA84A28);
   static const Color disabled = Color(0xFF9EAAA6);
   static const Color error = Color(0xFFB6535C);
 }

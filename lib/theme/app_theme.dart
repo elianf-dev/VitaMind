@@ -9,6 +9,7 @@ class AppTheme {
   static ThemeData light() {
     final base = ThemeData(
       useMaterial3: true,
+      fontFamily: 'Inter',
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: AppColors.primary,
@@ -52,7 +53,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radius),
+          borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -71,7 +72,7 @@ class AppTheme {
           ),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radius),
+            borderRadius: BorderRadius.circular(AppSpacing.pillRadius),
           ),
         ),
       ),
@@ -90,7 +91,7 @@ class AppTheme {
           ),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radius),
+            borderRadius: BorderRadius.circular(AppSpacing.pillRadius),
           ),
         ),
       ),
@@ -100,7 +101,7 @@ class AppTheme {
           minimumSize: const Size(48, 48),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radius),
+            borderRadius: BorderRadius.circular(AppSpacing.pillRadius),
           ),
         ),
       ),
@@ -108,7 +109,7 @@ class AppTheme {
         style: IconButton.styleFrom(
           minimumSize: const Size(48, 48),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radius),
+            borderRadius: BorderRadius.circular(AppSpacing.pillRadius),
           ),
         ),
       ),
@@ -220,7 +221,7 @@ class AppTheme {
         backgroundColor: AppColors.glassStrong,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radius),
+          borderRadius: BorderRadius.circular(AppSpacing.dialogRadius),
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
