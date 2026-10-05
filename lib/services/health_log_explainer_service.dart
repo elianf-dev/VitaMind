@@ -95,10 +95,12 @@ class HealthLogExplainerService {
       'A pharmacist or prescriber can answer questions about medication timing, side effects, or changes.',
     ];
 
-    if (_mentionsImmediateMentalHealthRisk(combinedText)) {
+    final mentionsImmediateMentalHealthRisk =
+        _mentionsImmediateMentalHealthRisk(combinedText);
+    if (mentionsImmediateMentalHealthRisk) {
       warningSigns.insert(
         0,
-        'If you may hurt yourself or someone else, call local emergency services or go to the nearest emergency department now.',
+        'If you may hurt yourself or someone else, call local emergency services or go to the nearest emergency department now. In the U.S., you can call or text 988 to reach the 988 Suicide & Crisis Lifeline any time.',
       );
     }
 
@@ -145,11 +147,15 @@ class HealthLogExplainerService {
       warningSigns: warningSigns,
       doctorQuestions: doctorQuestions,
       disclaimer: 'This is not medical advice or a diagnosis.',
-      trustedSources: TrustedHealthSources.forHealthLog(
-        symptoms: request.symptoms,
-        diagnosedConditions: conditionNames,
-        medications: request.medications,
-      ),
+      trustedSources: [
+        if (mentionsImmediateMentalHealthRisk)
+          TrustedHealthSources.suicideAndCrisisLifeline,
+        ...TrustedHealthSources.forHealthLog(
+          symptoms: request.symptoms,
+          diagnosedConditions: conditionNames,
+          medications: request.medications,
+        ),
+      ],
       source: HealthLogResponseSource.sourceSupported,
     );
   }
@@ -177,12 +183,35 @@ class HealthLogExplainerService {
         lower.contains('persistent');
   }
 
+  static const List<String> _immediateMentalHealthRiskPhrases = [
+    'suicide',
+    'suicidal',
+    'self harm',
+    'self-harm',
+    'harm myself',
+    'harming myself',
+    'hurt myself',
+    'hurting myself',
+    'hurt someone',
+    'kill myself',
+    'killing myself',
+    'kill someone',
+    'want to die',
+    'wanna die',
+    'end my life',
+    'ending my life',
+    'take my own life',
+    "don't want to live",
+    'dont want to live',
+    "don't want to be alive",
+    'dont want to be alive',
+    'no reason to live',
+    'better off dead',
+  ];
+
   bool _mentionsImmediateMentalHealthRisk(String text) {
-    return text.contains('suicide') ||
-        text.contains('suicidal') ||
-        text.contains('self harm') ||
-        text.contains('self-harm') ||
-        text.contains('hurt myself') ||
-        text.contains('hurt someone');
+    // Phone keyboards often insert a curly apostrophe in "don’t".
+    final normalized = text.replaceAll('’', "'");
+    return _immediateMentalHealthRiskPhrases.any(normalized.contains);
   }
 }

@@ -107,4 +107,50 @@ void main() {
       expect(response.warningSigns.first, contains('emergency'));
     },
   );
+
+  test(
+    'common crisis phrasings show the 988 line first and cite the Lifeline',
+    () async {
+      for (final symptoms in const [
+        'I want to kill myself',
+        'honestly I just want to die',
+        'thinking about ending my life',
+        'I don’t want to live anymore',
+        'feel like everyone would be better off dead without me',
+      ]) {
+        final response = await service.explainHealthLog(
+          request(symptoms: symptoms),
+        );
+
+        expect(response.warningSigns.first, contains('988'), reason: symptoms);
+        expect(
+          response.trustedSources.first.url,
+          'https://988lifeline.org/',
+          reason: symptoms,
+        );
+      }
+    },
+  );
+
+  test('crisis phrasing in clinician notes is also caught', () async {
+    final response = await service.explainHealthLog(
+      request(symptoms: 'Low mood', doctorNotes: 'Said they want to die'),
+    );
+
+    expect(response.warningSigns.first, contains('988'));
+  });
+
+  test('ordinary symptoms do not show the crisis line', () async {
+    final response = await service.explainHealthLog(
+      request(symptoms: 'I cut myself cooking and have a headache'),
+    );
+
+    expect(response.warningSigns.any((sign) => sign.contains('988')), isFalse);
+    expect(
+      response.trustedSources.any(
+        (source) => source.url == 'https://988lifeline.org/',
+      ),
+      isFalse,
+    );
+  });
 }

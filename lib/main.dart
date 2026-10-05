@@ -17,6 +17,7 @@ import 'screens/welcome_screen.dart';
 import 'screens/wellness_goals_screen.dart';
 import 'screens/vitamind_plus_screen.dart';
 import 'services/auth_service.dart';
+import 'services/check_in_restore.dart';
 import 'services/firebase_bootstrap_service.dart';
 import 'services/firestore_service.dart';
 import 'services/local_storage_service.dart';
@@ -41,22 +42,14 @@ Future<void> main() async {
   await notificationService.initialize();
   final onboardingCompleted = await localStorageService
       .loadOnboardingCompleted();
+  final guestSessionActive = await localStorageService.loadGuestSession();
 
-  var checkInSettings = await localStorageService.loadCheckInSettings();
-  final userId = authService.userId;
-  if (userId != null && firestoreService.enabled) {
-    try {
-      checkInSettings =
-          await firestoreService.loadCheckInSettings(userId) ?? checkInSettings;
-      await localStorageService.saveCheckInSettings(checkInSettings);
-    } on Object catch (error) {
-      debugPrint('VitaMind: failed to load cloud check-in settings: $error');
-      // Keep the local schedule usable if Firestore is unreachable.
-    }
-  }
-  if (onboardingCompleted) {
-    await notificationService.applyCheckInSettings(checkInSettings);
-  }
+  await restoreCheckInsForActiveProfile(
+    authService: authService,
+    firestoreService: firestoreService,
+    localStorageService: localStorageService,
+    notificationService: notificationService,
+  );
 
   runApp(
     VitaMindApp(
@@ -65,6 +58,7 @@ Future<void> main() async {
       localStorageService: localStorageService,
       notificationService: notificationService,
       onboardingCompleted: onboardingCompleted,
+      guestSessionActive: guestSessionActive,
     ),
   );
 }
@@ -77,6 +71,7 @@ class VitaMindApp extends StatelessWidget {
     required this.localStorageService,
     required this.notificationService,
     this.onboardingCompleted = false,
+    this.guestSessionActive = false,
   });
 
   final AuthService authService;
@@ -84,6 +79,7 @@ class VitaMindApp extends StatelessWidget {
   final LocalStorageService localStorageService;
   final NotificationService notificationService;
   final bool onboardingCompleted;
+  final bool guestSessionActive;
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +88,7 @@ class VitaMindApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       builder: (context, child) => AppBackdrop(child: child!),
-      initialRoute: authService.isLoggedIn
+      initialRoute: authService.isLoggedIn || guestSessionActive
           ? onboardingCompleted
                 ? '/dashboard'
                 : '/onboarding'
@@ -100,7 +96,9 @@ class VitaMindApp extends StatelessWidget {
       routes: {
         '/': (context) => WelcomeScreen(
           authService: authService,
+          firestoreService: firestoreService,
           localStorageService: localStorageService,
+          notificationService: notificationService,
         ),
         '/onboarding': (context) => const OnboardingIntroScreen(),
         '/onboarding/conditions': (context) => DiagnosedIllnessesScreen(

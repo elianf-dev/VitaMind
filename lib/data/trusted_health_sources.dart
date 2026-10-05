@@ -233,6 +233,14 @@ class TrustedHealthSources {
     url: 'https://my.clevelandclinic.org/health',
   );
 
+  static const suicideAndCrisisLifeline = TrustedHealthSource(
+    title: '988 Suicide & Crisis Lifeline',
+    organization: 'SAMHSA / U.S. Department of Health and Human Services',
+    description:
+        'Free, confidential support 24/7 by call or text to 988 in the U.S.',
+    url: 'https://988lifeline.org/',
+  );
+
   static List<TrustedHealthSource> forHealthLog({
     required String symptoms,
     required Iterable<String> diagnosedConditions,
