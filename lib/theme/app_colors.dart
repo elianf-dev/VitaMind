@@ -38,5 +38,13 @@ class AppColors {
   static const Color purpleSoft = Color(0xD9E9E0EF);
   static const Color coral = Color(0xFFA84A28);
   static const Color disabled = Color(0xFF9EAAA6);
+
+  // Diverging mood scale: warm = unpleasant, gray = neutral, teal = pleasant.
+  // Validated for CVD separation with the dataviz palette checks.
+  static const Color moodVeryUnpleasant = Color(0xFFA8522A);
+  static const Color moodUnpleasant = Color(0xFFE0A06E);
+  static const Color moodNeutral = Color(0xFFD3DAD8);
+  static const Color moodPleasant = Color(0xFF6FB5B0);
+  static const Color moodVeryPleasant = Color(0xFF0E6E7C);
   static const Color error = Color(0xFFB6535C);
 }

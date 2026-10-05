@@ -170,6 +170,7 @@ class _VitaMindShellState extends State<VitaMindShell> {
   int _selectedIndex = 0;
   int _homeRefreshToken = 0;
   int _moodRefreshToken = 0;
+  int _insightsRefreshToken = 0;
 
   List<Widget> _buildScreens() {
     return [
@@ -193,7 +194,10 @@ class _VitaMindShellState extends State<VitaMindShell> {
         firestoreService: widget.firestoreService,
         localStorageService: widget.localStorageService,
       ),
-      InsightsScreen(localStorageService: widget.localStorageService),
+      InsightsScreen(
+        key: ValueKey('insights-$_insightsRefreshToken'),
+        localStorageService: widget.localStorageService,
+      ),
       ProfileScreen(
         authService: widget.authService,
         firestoreService: widget.firestoreService,
@@ -207,6 +211,10 @@ class _VitaMindShellState extends State<VitaMindShell> {
     setState(() {
       if (index == 0 && _selectedIndex != 0) {
         _homeRefreshToken++;
+      }
+      // Rebuild Insights on entry so charts include logs made elsewhere.
+      if (index == 3 && _selectedIndex != 3) {
+        _insightsRefreshToken++;
       }
       _selectedIndex = index;
     });
