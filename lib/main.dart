@@ -12,6 +12,7 @@ import 'screens/onboarding/onboarding_summary_screen.dart';
 import 'screens/onboarding/privacy_security_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/privacy_security_settings_screen.dart';
+import 'screens/support_screen.dart';
 import 'screens/symptom_tracker_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/wellness_goals_screen.dart';
@@ -141,6 +142,7 @@ class VitaMindApp extends StatelessWidget {
           notificationService: notificationService,
         ),
         '/vitamind-plus': (context) => const VitaMindPlusScreen(),
+        SupportScreen.routeName: (context) => const SupportScreen(),
       },
     );
   }
@@ -167,18 +169,21 @@ class VitaMindShell extends StatefulWidget {
 class _VitaMindShellState extends State<VitaMindShell> {
   int _selectedIndex = 0;
   int _homeRefreshToken = 0;
+  int _moodRefreshToken = 0;
 
   List<Widget> _buildScreens() {
     return [
       HomeScreen(
         key: ValueKey('home-$_homeRefreshToken'),
         onNavigate: _setSelectedIndex,
+        onMoodLogged: () => setState(() => _moodRefreshToken++),
         authService: widget.authService,
         firestoreService: widget.firestoreService,
         localStorageService: widget.localStorageService,
         notificationService: widget.notificationService,
       ),
       MoodTrackerScreen(
+        key: ValueKey('mood-$_moodRefreshToken'),
         authService: widget.authService,
         firestoreService: widget.firestoreService,
         localStorageService: widget.localStorageService,

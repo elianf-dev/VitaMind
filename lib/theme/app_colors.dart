@@ -28,7 +28,8 @@ class AppColors {
   static const Color mutedText = Color(0xFF5E746D);
   static const Color bodyText = Color(0xFF34534B);
   static const Color mutedIcon = Color(0xFF7A918A);
-  static const Color warning = Color(0xFFD38A42);
+  // Darkened from #D38A42 (2.6:1) to pass WCAG 3:1 for icons on cards.
+  static const Color warning = Color(0xFFA8651F);
   static const Color warningSurface = Color(0xD9F7EFE0);
   static const Color warningBorder = Color(0xBFE6D6B8);
   static const Color blue = Color(0xFF587EAC);

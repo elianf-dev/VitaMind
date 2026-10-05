@@ -255,7 +255,7 @@ class _WelcomeActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Welcome back.', style: AppTextStyles.display(size: 20)),
+        Text('Welcome.', style: AppTextStyles.display(size: 20)),
         const SizedBox(height: 6),
         const Text(
           'Track mood, symptoms, and what your doctor actually said — in your own words.',

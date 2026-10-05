@@ -5,11 +5,9 @@ import 'app_colors.dart';
 class AppTextStyles {
   const AppTextStyles._();
 
+  // Page titles share the Fraunces display face used on Home and Insights.
   static TextStyle? pageTitle(BuildContext context) {
-    return Theme.of(context).textTheme.headlineSmall?.copyWith(
-      color: AppColors.text,
-      fontWeight: FontWeight.w800,
-    );
+    return display(size: 28);
   }
 
   static TextStyle? sectionTitle(BuildContext context) {
@@ -65,7 +63,10 @@ class AppTextStyles {
     );
   }
 
-  static TextStyle eyebrow({Color color = AppColors.mutedText, double size = 11}) {
+  static TextStyle eyebrow({
+    Color color = AppColors.mutedText,
+    double size = 11,
+  }) {
     return TextStyle(
       fontFamily: 'Inter',
       fontSize: size,

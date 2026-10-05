@@ -457,6 +457,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const AppSectionHeader(title: 'App'),
           VitaMindSettingsTile(
+            icon: Icons.favorite_outline,
+            title: 'Need help now',
+            subtitle: 'Crisis lines and a short grounding exercise',
+            onTap: () => Navigator.of(context).pushNamed('/support'),
+          ),
+          VitaMindSettingsTile(
             icon: Icons.history_outlined,
             title: 'Health Log History',
             subtitle: 'Review previous health explainer logs',
