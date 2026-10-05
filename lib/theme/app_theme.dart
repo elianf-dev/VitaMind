@@ -141,6 +141,16 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.error),
         ),
       ),
+      // Teal selection like chips and nav, not the rose secondary color.
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: SegmentedButton.styleFrom(
+          selectedBackgroundColor: AppColors.primarySoft,
+          selectedForegroundColor: AppColors.primary,
+          foregroundColor: AppColors.bodyText,
+          side: const BorderSide(color: AppColors.primarySoft),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
       chipTheme: base.chipTheme.copyWith(
         backgroundColor: AppColors.recessedSurface,
         selectedColor: AppColors.primarySoft,

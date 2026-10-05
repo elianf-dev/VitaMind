@@ -10,7 +10,11 @@ import '../services/local_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import '../utils/insight_math.dart';
+import '../widgets/app_section_header.dart';
 import '../widgets/disclaimer_card.dart';
+import '../widgets/insights/daily_line_chart.dart';
+import '../widgets/insights/mood_calendar.dart';
 import '../widgets/vita_mind_action_card.dart';
 import '../widgets/vita_mind_card.dart';
 
@@ -30,6 +34,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
   List<SymptomEntry> _symptoms = [];
   List<JournalEntry> _journals = [];
   bool _loading = true;
+  int _trendDays = 7;
+  String? _selectedSymptom;
 
   @override
   void initState() {
@@ -72,7 +78,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'This week',
+                  'Your patterns',
                   style: AppTextStyles.eyebrow(color: AppColors.primary),
                 ),
                 const SizedBox(height: 6),
@@ -87,7 +93,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
             const LinearProgressIndicator(minHeight: 3),
             const SizedBox(height: AppSpacing.md),
           ],
-          ..._buildFlagshipInsight(),
+          ..._buildVisualInsights(),
+          if (!_loading) const AppSectionHeader(title: 'Notes'),
           ..._buildRuleBasedInsights(),
           if (_conditions.isNotEmpty)
             _InsightCard(
@@ -129,64 +136,227 @@ class _InsightsScreenState extends State<InsightsScreen> {
     );
   }
 
-  List<Widget> _buildFlagshipInsight() {
+  List<Widget> _buildVisualInsights() {
     if (_loading) {
       return const [];
     }
 
-    final now = DateTime.now();
-    final days = List.generate(
-      7,
-      (i) => now.subtract(Duration(days: 6 - i)),
+    final today = dayOf(DateTime.now());
+    final byDay = moodsByDay(_moods);
+    return [
+      const AppSectionHeader(
+        title: 'Mood calendar',
+        subtitle: 'Each day is colored by its average mood. Tap a day.',
+      ),
+      VitaMindCard(
+        child: MoodCalendar(byDay: byDay, today: today),
+      ),
+      ..._buildMoodTrend(byDay, today),
+      ..._buildSymptomTrend(today),
+      ..._buildJournalComparison(byDay, today),
+    ];
+  }
+
+  List<Widget> _buildMoodTrend(Map<DateTime, DayMood> byDay, DateTime today) {
+    final days = _trendDays;
+    final start = DateTime(today.year, today.month, today.day - (days - 1));
+    final current = summarizeMoods(
+      byDay,
+      start: start,
+      endExclusive: DateTime(today.year, today.month, today.day + 1),
     );
-    final journalDayKeys = _journals
-        .map((entry) => _dayKey(entry.createdAt))
-        .toSet();
-    final positiveMoodDayKeys = _moods
-        .where((entry) {
-          final label = entry.label.toLowerCase();
-          return label.contains('happy') ||
-              label.contains('calm') ||
-              label.contains('good') ||
-              label.contains('great');
-        })
-        .map((entry) => _dayKey(entry.createdAt))
-        .toSet();
-    final lowMoodDayKeys = _moods
-        .where((entry) {
-          final label = entry.label.toLowerCase();
-          return label.contains('sad') ||
-              label.contains('low') ||
-              label.contains('anxious') ||
-              label.contains('stressed') ||
-              label.contains('down');
-        })
-        .map((entry) => _dayKey(entry.createdAt))
-        .toSet();
+    final previous = summarizeMoods(
+      byDay,
+      start: DateTime(start.year, start.month, start.day - days),
+      endExclusive: start,
+    );
 
-    final journaledDaysInWindow = days
-        .where((day) => journalDayKeys.contains(_dayKey(day)))
-        .toList();
-    if (journaledDaysInWindow.isEmpty) {
-      return const [];
-    }
-
-    final improvedCount = journaledDaysInWindow
-        .where((day) => positiveMoodDayKeys.contains(_dayKey(day)))
-        .length;
-    if (improvedCount == 0) {
-      return const [];
+    var summary = 'No mood check-ins in the last $days days.';
+    if (current != null) {
+      summary =
+          'Average: ${current.band.label} · ${current.checkIns} check-in${current.checkIns == 1 ? '' : 's'} on ${current.days} day${current.days == 1 ? '' : 's'}';
+      // Only compare periods with enough days to mean something.
+      if (previous != null && current.days >= 3 && previous.days >= 3) {
+        final difference = current.average - previous.average;
+        summary += difference.abs() < 0.25
+            ? ' · about the same as the $days days before'
+            : difference > 0
+            ? ' · more pleasant than the $days days before'
+            : ' · less pleasant than the $days days before';
+      }
     }
 
     return [
-      _FlagshipInsightCard(
-        days: days,
-        journalDayKeys: journalDayKeys,
-        lowMoodDayKeys: lowMoodDayKeys,
-        improvedCount: improvedCount,
-        journaledDayCount: journaledDaysInWindow.length,
+      const AppSectionHeader(title: 'Mood trend'),
+      VitaMindCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(value: 7, label: Text('7 days')),
+                ButtonSegment(value: 30, label: Text('30 days')),
+              ],
+              selected: {days},
+              showSelectedIcon: false,
+              onSelectionChanged: (selection) =>
+                  setState(() => _trendDays = selection.first),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(summary, style: AppTextStyles.cardBody(context)),
+            const SizedBox(height: AppSpacing.md),
+            if (byDay.isEmpty)
+              Text(
+                'Log a mood from Home to start your chart.',
+                style: AppTextStyles.meta(context),
+              )
+            else
+              DailyLineChart(
+                values: dailyMoodSeries(byDay, end: today, days: days),
+                end: today,
+                minY: -2,
+                maxY: 2,
+                color: AppColors.primary,
+                guides: const [
+                  ChartGuide(2, '😄'),
+                  ChartGuide(0, '😐'),
+                  ChartGuide(-2, '😟'),
+                ],
+                describePoint: (day, value) =>
+                    '${formatShortDate(day)}: ${MoodBand.forScore(value).label}',
+                semanticSummary:
+                    'Mood trend for the last $days days. $summary.',
+              ),
+          ],
+        ),
       ),
-      const SizedBox(height: AppSpacing.md),
+    ];
+  }
+
+  List<Widget> _buildSymptomTrend(DateTime today) {
+    const days = 30;
+    final since = DateTime(today.year, today.month, today.day - (days - 1));
+    final names = topSymptoms(_symptoms, since: since);
+    if (names.isEmpty) {
+      return const [];
+    }
+
+    final symptom = names.contains(_selectedSymptom)
+        ? _selectedSymptom!
+        : names.first;
+    final values = dailySymptomSeries(
+      _symptoms,
+      symptom: symptom,
+      end: today,
+      days: days,
+    );
+    final logged = values.whereType<double>().toList();
+    final highest = logged.reduce((a, b) => a > b ? a : b).round();
+    final summary =
+        '$symptom: logged on ${logged.length} of the last $days days · highest $highest/10';
+
+    return [
+      const AppSectionHeader(
+        title: 'Symptom severity',
+        subtitle: 'Highest severity logged each day, last 30 days.',
+      ),
+      VitaMindCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (names.length > 1) ...[
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
+                children: [
+                  for (final name in names)
+                    ChoiceChip(
+                      label: Text(name),
+                      selected: name == symptom,
+                      onSelected: (_) =>
+                          setState(() => _selectedSymptom = name),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+            Text(summary, style: AppTextStyles.cardBody(context)),
+            const SizedBox(height: AppSpacing.md),
+            DailyLineChart(
+              values: values,
+              end: today,
+              minY: 0,
+              maxY: 10,
+              color: AppColors.blue,
+              guides: const [
+                ChartGuide(10, '10'),
+                ChartGuide(5, '5'),
+                ChartGuide(0, '0'),
+              ],
+              describePoint: (day, value) =>
+                  '${formatShortDate(day)}: $symptom ${value.round()}/10',
+              semanticSummary: 'Symptom severity chart. $summary.',
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildJournalComparison(
+    Map<DateTime, DayMood> byDay,
+    DateTime today,
+  ) {
+    if (byDay.isEmpty || _journals.isEmpty) {
+      return const [];
+    }
+
+    final comparison = compareMoodByJournal(
+      byDay,
+      _journals,
+      since: DateTime(today.year, today.month, today.day - 29),
+    );
+
+    return [
+      const AppSectionHeader(
+        title: 'Journaling and mood',
+        subtitle: 'Last 30 days',
+      ),
+      VitaMindCard(
+        child: comparison == null
+            ? Text(
+                'Not enough logs to compare yet. This needs at least 3 days with a journal entry and 3 without, each with a mood check-in.',
+                style: AppTextStyles.cardBody(context),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _MoodStatTile(
+                          title: 'Days you journaled',
+                          summary: comparison.journaled,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _MoodStatTile(
+                          title: 'Other days',
+                          summary: comparison.notJournaled,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'A pattern, not a cause. Sleep, stress, and many other things affect mood too.',
+                    style: AppTextStyles.meta(context),
+                  ),
+                ],
+              ),
+      ),
     ];
   }
 
@@ -293,130 +463,44 @@ class _InsightsScreenState extends State<InsightsScreen> {
   }
 }
 
-class _FlagshipInsightCard extends StatelessWidget {
-  const _FlagshipInsightCard({
-    required this.days,
-    required this.journalDayKeys,
-    required this.lowMoodDayKeys,
-    required this.improvedCount,
-    required this.journaledDayCount,
-  });
+class _MoodStatTile extends StatelessWidget {
+  const _MoodStatTile({required this.title, required this.summary});
 
-  final List<DateTime> days;
-  final Set<String> journalDayKeys;
-  final Set<String> lowMoodDayKeys;
-  final int improvedCount;
-  final int journaledDayCount;
-
-  static const _weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
-  String _dayKey(DateTime date) {
-    final local = date.toLocal();
-    return '${local.year}-${local.month}-${local.day}';
-  }
+  final String title;
+  final MoodSummary summary;
 
   @override
   Widget build(BuildContext context) {
-    return VitaMindCard(
-      margin: EdgeInsets.zero,
-      padding: AppSpacing.cardLarge,
-      backgroundColor: AppColors.glassStrong,
+    return Semantics(
+      container: true,
+      label: '$title: ${summary.band.label}, from ${summary.days} days',
+      excludeSemantics: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(title, style: AppTextStyles.meta(context)),
+          const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  'Insight',
-                  style: AppTextStyles.eyebrow(color: AppColors.coral),
+              Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: moodBandColor(summary.band),
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
-              const Icon(LucideIcons.sun, color: AppColors.coral, size: 20),
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(
+                  summary.band.label,
+                  style: AppTextStyles.cardTitle(context),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text.rich(
-            TextSpan(
-              style: AppTextStyles.display(size: 19, weight: FontWeight.w500, height: 1.4),
-              children: [
-                const TextSpan(
-                  text: 'Your mood tends to improve on days you journal — ',
-                ),
-                TextSpan(
-                  text:
-                      '$improvedCount of the last $journaledDayCount '
-                      '${journaledDayCount == 1 ? 'day' : 'days'}.',
-                  style: const TextStyle(
-                    decoration: TextDecoration.underline,
-                    decorationColor: AppColors.coral,
-                    decorationThickness: 2,
-                    color: AppColors.coral,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 56,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (var i = 0; i < days.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 6),
-                  Expanded(child: _bar(days[i])),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              for (var i = 0; i < days.length; i++) ...[
-                if (i > 0) const SizedBox(width: 6),
-                Expanded(child: _barLabel(days[i])),
-              ],
-            ],
-          ),
+          Text('${summary.days} days', style: AppTextStyles.meta(context)),
         ],
-      ),
-    );
-  }
-
-  Widget _bar(DateTime day) {
-    final key = _dayKey(day);
-    final hasJournal = journalDayKeys.contains(key);
-    final isLowMood = lowMoodDayKeys.contains(key);
-    final color = hasJournal
-        ? AppColors.primary
-        : isLowMood
-            ? const Color(0xFFE9DDD8)
-            : AppColors.primarySoft;
-    final heightFactor = hasJournal ? 0.85 : (isLowMood ? 0.45 : 0.65);
-
-    return FractionallySizedBox(
-      heightFactor: heightFactor,
-      alignment: Alignment.bottomCenter,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(6),
-        ),
-      ),
-    );
-  }
-
-  Widget _barLabel(DateTime day) {
-    final hasJournal = journalDayKeys.contains(_dayKey(day));
-    return Text(
-      _weekdayLetters[day.weekday - 1],
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontFamily: 'Inter',
-        fontSize: 10,
-        fontWeight: hasJournal ? FontWeight.w700 : FontWeight.w500,
-        color: hasJournal ? AppColors.primary : AppColors.mutedText,
       ),
     );
   }
