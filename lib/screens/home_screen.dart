@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 
+import '../data/mood_choices.dart';
 import '../models/check_in_settings.dart';
 import '../models/diagnosed_condition.dart';
+import '../models/mood_entry.dart';
 import '../models/privacy_security_settings.dart';
 import '../models/wellness_goal.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/mood_log_service.dart';
 import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -15,6 +18,8 @@ import '../theme/app_text_styles.dart';
 import '../widgets/app_section_header.dart';
 import '../widgets/empty_state_card.dart';
 import '../widgets/goal_card.dart';
+import '../widgets/support_nudge_card.dart';
+import 'support_screen.dart';
 import '../widgets/vita_mind_action_card.dart';
 import '../widgets/vita_mind_card.dart';
 
@@ -26,9 +31,13 @@ class HomeScreen extends StatefulWidget {
     required this.firestoreService,
     required this.localStorageService,
     required this.notificationService,
+    this.onMoodLogged,
   });
 
   final ValueChanged<int> onNavigate;
+
+  /// Called after a quick mood log so other tabs can refresh their history.
+  final VoidCallback? onMoodLogged;
   final AuthService authService;
   final FirestoreService firestoreService;
   final LocalStorageService localStorageService;
@@ -44,6 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
   CheckInSettings _checkInSettings = CheckInSettings.defaults();
   PrivacySecuritySettings _privacySettings = PrivacySecuritySettings.defaults();
   bool _loadingPersonalization = true;
+  bool _savingMood = false;
+  bool _showSupportNudge = false;
 
   @override
   void initState() {
@@ -86,6 +97,35 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
     await widget.notificationService.applyCheckInSettings(settings);
+  }
+
+  Future<void> _logQuickMood(MoodChoice mood) async {
+    setState(() {
+      _savingMood = true;
+      _showSupportNudge = mood.offerSupport;
+    });
+
+    final synced = await recordMoodEntry(
+      entry: MoodEntry.create(emoji: mood.emoji, label: mood.label, notes: ''),
+      authService: widget.authService,
+      firestoreService: widget.firestoreService,
+      localStorageService: widget.localStorageService,
+    );
+    widget.onMoodLogged?.call();
+
+    if (!mounted) {
+      return;
+    }
+    setState(() => _savingMood = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          synced
+              ? '${mood.label} mood saved'
+              : 'Mood saved locally. Cloud sync is unavailable.',
+        ),
+      ),
+    );
   }
 
   Future<void> _openAndRefresh(String routeName) async {
@@ -160,7 +200,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_todayLabel(), style: AppTextStyles.eyebrow(color: AppColors.primary)),
+                Text(
+                  _todayLabel(),
+                  style: AppTextStyles.eyebrow(color: AppColors.primary),
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   '${_greeting()}, friend.',
@@ -179,31 +222,39 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          const AppSectionHeader(title: 'How are you feeling today?'),
-          Row(
-            children: [
-              Expanded(
-                child: VitaMindActionCard(
-                  compact: true,
-                  icon: LucideIcons.smile,
-                  title: 'Log mood',
-                  subtitle: 'Quick mood check',
-                  accentColor: AppColors.primary,
-                  onTap: () => widget.onNavigate(1),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: VitaMindActionCard(
-                  compact: true,
-                  icon: LucideIcons.activity,
-                  title: 'Log symptoms',
-                  subtitle: 'Track severity',
-                  accentColor: AppColors.blue,
-                  onTap: () => Navigator.of(context).pushNamed('/symptoms'),
-                ),
-              ),
-            ],
+          const AppSectionHeader(
+            title: 'How are you feeling today?',
+            subtitle: 'Tap one to log it. Add notes anytime in Mood.',
+          ),
+          VitaMindCard(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Row(
+              children: [
+                for (final mood in moodChoices)
+                  Expanded(
+                    child: _QuickMoodButton(
+                      mood: mood,
+                      onTap: _savingMood ? null : () => _logQuickMood(mood),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (_showSupportNudge)
+            SupportNudgeCard(
+              onDismiss: () => setState(() => _showSupportNudge = false),
+            ),
+          const SizedBox(height: AppSpacing.md),
+          VitaMindActionCard(
+            icon: LucideIcons.activity,
+            title: 'Log symptoms',
+            subtitle: 'Track what you feel and how severe it is.',
+            accentColor: AppColors.blue,
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: AppColors.mutedIcon,
+            ),
+            onTap: () => Navigator.of(context).pushNamed('/symptoms'),
           ),
           AppSectionHeader(
             title: 'Current goals',
@@ -287,6 +338,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             onTap: () => _openAndRefresh('/diagnosed-conditions'),
           ),
+          const SizedBox(height: AppSpacing.md),
+          Center(
+            child: TextButton.icon(
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(SupportScreen.routeName),
+              icon: const Icon(Icons.favorite_outline),
+              label: const Text('Need help now?'),
+            ),
+          ),
         ],
       ),
     );
@@ -312,5 +372,44 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return 'Tracking: $names, and ${_conditions.length - 3} more';
+  }
+}
+
+class _QuickMoodButton extends StatelessWidget {
+  const _QuickMoodButton({required this.mood, required this.onTap});
+
+  final MoodChoice mood;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: 'Log mood: ${mood.label}',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.md),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 72),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(mood.emoji, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                mood.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.meta(
+                  context,
+                )?.copyWith(color: AppColors.bodyText),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

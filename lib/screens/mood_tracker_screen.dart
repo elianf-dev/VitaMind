@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../data/mood_choices.dart';
 import '../models/mood_entry.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/mood_log_service.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/entry_merge.dart';
@@ -11,6 +13,7 @@ import '../widgets/vita_mind_buttons.dart';
 import '../widgets/vita_mind_card.dart';
 import '../widgets/vita_mind_page_header.dart';
 import '../widgets/mood_option.dart';
+import '../widgets/support_nudge_card.dart';
 
 class MoodTrackerScreen extends StatefulWidget {
   const MoodTrackerScreen({
@@ -28,26 +31,14 @@ class MoodTrackerScreen extends StatefulWidget {
   State<MoodTrackerScreen> createState() => _MoodTrackerScreenState();
 }
 
-class _MoodChoice {
-  const _MoodChoice(this.emoji, this.label);
-
-  final String emoji;
-  final String label;
-}
-
 class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
   final TextEditingController _notesController = TextEditingController();
   final List<MoodEntry> _entries = [];
-  final List<_MoodChoice> _moods = const [
-    _MoodChoice('😄', 'Happy'),
-    _MoodChoice('🙂', 'Calm'),
-    _MoodChoice('😐', 'Okay'),
-    _MoodChoice('😟', 'Low'),
-    _MoodChoice('😣', 'Anxious'),
-  ];
 
-  int _selectedMoodIndex = 1;
+  // Nothing is preselected so the default never nudges the answer.
+  int? _selectedMoodIndex;
   bool _loadingEntries = true;
+  bool _showSupportNudge = false;
 
   @override
   void initState() {
@@ -105,7 +96,11 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
   }
 
   Future<void> _saveMood() async {
-    final mood = _moods[_selectedMoodIndex];
+    final selectedIndex = _selectedMoodIndex;
+    if (selectedIndex == null) {
+      return;
+    }
+    final mood = moodChoices[selectedIndex];
     final entry = MoodEntry.create(
       emoji: mood.emoji,
       label: mood.label,
@@ -115,35 +110,30 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
     setState(() {
       _entries.insert(0, entry);
       _notesController.clear();
+      _selectedMoodIndex = null;
+      _showSupportNudge = mood.offerSupport;
     });
 
-    await widget.localStorageService.addMoodEntry(entry);
-
-    final userId = widget.authService.userId;
-    if (userId != null && widget.firestoreService.enabled) {
-      try {
-        await widget.firestoreService.saveMoodEntry(userId, entry);
-      } on Object catch (error) {
-        debugPrint('VitaMind: failed to save mood entry to cloud: $error');
-        if (!mounted) {
-          return;
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Mood saved locally. Cloud sync is unavailable.'),
-          ),
-        );
-        return;
-      }
-    }
+    final synced = await recordMoodEntry(
+      entry: entry,
+      authService: widget.authService,
+      firestoreService: widget.firestoreService,
+      localStorageService: widget.localStorageService,
+    );
 
     if (!mounted) {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('${mood.label} mood saved')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          synced
+              ? '${mood.label} mood saved'
+              : 'Mood saved locally. Cloud sync is unavailable.',
+        ),
+      ),
+    );
   }
 
   @override
@@ -163,15 +153,19 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.md,
             children: [
-              for (var index = 0; index < _moods.length; index++)
+              for (var index = 0; index < moodChoices.length; index++)
                 MoodOption(
-                  emoji: _moods[index].emoji,
-                  label: _moods[index].label,
+                  emoji: moodChoices[index].emoji,
+                  label: moodChoices[index].label,
                   selected: _selectedMoodIndex == index,
                   onTap: () => setState(() => _selectedMoodIndex = index),
                 ),
             ],
           ),
+          if (_showSupportNudge)
+            SupportNudgeCard(
+              onDismiss: () => setState(() => _showSupportNudge = false),
+            ),
           const SizedBox(height: AppSpacing.xxl),
           TextField(
             controller: _notesController,
@@ -185,7 +179,9 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           VitaMindPrimaryButton(
-            onPressed: _loadingEntries ? null : _saveMood,
+            onPressed: _loadingEntries || _selectedMoodIndex == null
+                ? null
+                : _saveMood,
             icon: Icons.check,
             label: 'Save Mood',
           ),
