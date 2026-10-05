@@ -9,6 +9,11 @@ coverage/
 
 # Android and iOS generated files
 android/local.properties
+
+# Android release signing secrets
+android/key.properties
+*.jks
+*.keystore
 ios/Flutter/Generated.xcconfig
 ios/Flutter/flutter_export_environment.sh
 

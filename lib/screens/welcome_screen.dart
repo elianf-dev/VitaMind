@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 
 import '../services/auth_service.dart';
+import '../services/check_in_restore.dart';
+import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
@@ -15,11 +18,15 @@ class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({
     super.key,
     required this.authService,
+    required this.firestoreService,
     required this.localStorageService,
+    required this.notificationService,
   });
 
   final AuthService authService;
+  final FirestoreService firestoreService;
   final LocalStorageService localStorageService;
+  final NotificationService notificationService;
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -41,6 +48,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   Future<void> _enterApp() async {
+    await restoreCheckInsForActiveProfile(
+      authService: widget.authService,
+      firestoreService: widget.firestoreService,
+      localStorageService: widget.localStorageService,
+      notificationService: widget.notificationService,
+    );
     final onboardingCompleted = await widget.localStorageService
         .loadOnboardingCompleted();
 
@@ -79,6 +92,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     if (error == null) {
       widget.localStorageService.setProfileId(widget.authService.userId);
+      await widget.localStorageService.saveGuestSession(false);
       await _enterApp();
     }
   }
@@ -86,6 +100,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Future<void> _continueAsGuest() async {
     await widget.authService.continueAsGuest();
     widget.localStorageService.setProfileId(null);
+    await widget.localStorageService.saveGuestSession(true);
     // TODO: Offer an upgrade path that merges guest local storage into Firestore.
     await _enterApp();
   }
@@ -270,10 +285,7 @@ class _WelcomeActions extends StatelessWidget {
         const SizedBox(height: 10),
         OutlinedButton(onPressed: onSignUp, child: const Text('Sign up')),
         const SizedBox(height: 10),
-        TextButton(
-          onPressed: onGuest,
-          child: const Text('Continue as guest'),
-        ),
+        TextButton(onPressed: onGuest, child: const Text('Continue as guest')),
       ],
     );
   }

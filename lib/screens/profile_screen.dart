@@ -79,8 +79,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _logout(BuildContext context) async {
+    // Stop this profile's reminders; the next profile restores its own on entry.
+    await widget.notificationService.cancelAllCheckIns();
     await widget.authService.signOut();
     widget.localStorageService.setProfileId(null);
+    await widget.localStorageService.saveGuestSession(false);
     if (!context.mounted) {
       return;
     }

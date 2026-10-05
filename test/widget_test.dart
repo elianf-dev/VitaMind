@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -126,5 +125,46 @@ void main() {
 
     expect(moods, hasLength(1));
     expect(moods.single.id, 'valid');
+  });
+
+  test('guest session flag persists until it is cleared', () async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final localStorageService = LocalStorageService(
+      preferences,
+      MemoryHealthStorage(),
+    );
+
+    expect(await localStorageService.loadGuestSession(), isFalse);
+
+    await localStorageService.saveGuestSession(true);
+    final relaunched = LocalStorageService(preferences, MemoryHealthStorage());
+    expect(await relaunched.loadGuestSession(), isTrue);
+
+    await relaunched.saveGuestSession(false);
+    expect(await relaunched.loadGuestSession(), isFalse);
+  });
+
+  testWidgets('a remembered guest session skips the welcome screen', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      VitaMindApp(
+        authService: AuthService(firebaseAvailable: false),
+        firestoreService: const FirestoreService(enabled: false),
+        localStorageService: LocalStorageService(
+          preferences,
+          MemoryHealthStorage(),
+        ),
+        notificationService: NotificationService(),
+        guestSessionActive: true,
+      ),
+    );
+
+    expect(find.text('Continue as guest'), findsNothing);
+    expect(find.text('Set up your wellness space'), findsOneWidget);
   });
 }

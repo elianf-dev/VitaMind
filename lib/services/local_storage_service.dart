@@ -18,6 +18,7 @@ class LocalStorageService {
 
   static const String _guestProfileId = 'guest';
   static const String _onboardingCompletedKey = 'vitamind.onboarding_completed';
+  static const String _guestSessionKey = 'vitamind.guest_session';
   static const String _moodsKey = 'vitamind.mood_entries';
   static const String _symptomsKey = 'vitamind.symptom_entries';
   static const String _journalsKey = 'vitamind.journal_entries';
@@ -45,6 +46,20 @@ class LocalStorageService {
     _profileId = trimmedProfileId == null || trimmedProfileId.isEmpty
         ? _guestProfileId
         : trimmedProfileId;
+  }
+
+  /// Whether the device was left in guest mode, so relaunching skips the
+  /// welcome screen. Device-wide rather than scoped to a profile.
+  Future<bool> loadGuestSession() async {
+    return _preferences.getBool(_guestSessionKey) ?? false;
+  }
+
+  Future<void> saveGuestSession(bool active) async {
+    if (active) {
+      await _preferences.setBool(_guestSessionKey, true);
+    } else {
+      await _preferences.remove(_guestSessionKey);
+    }
   }
 
   Future<bool> loadOnboardingCompleted() async {
