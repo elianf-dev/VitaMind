@@ -7,6 +7,7 @@ import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_section_header.dart';
@@ -121,6 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final confirmed = await showDialog<bool>(
       context: context,
+      animationStyle: AppMotion.overlay(context),
       builder: (context) => AlertDialog(
         title: const Text('Delete VitaMind account?'),
         content: const Text(
@@ -396,6 +398,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 DropdownButtonFormField<CheckInFrequency>(
                   key: ValueKey(_checkInSettings.frequency.name),
+                  // Fit the field so options wrap at large text sizes.
+                  isExpanded: true,
                   initialValue: _checkInSettings.frequency,
                   decoration: const InputDecoration(
                     labelText: 'Frequency',

@@ -254,7 +254,7 @@ class _VitaMindShellState extends State<VitaMindShell> {
             constraints: const BoxConstraints(maxWidth: 760),
             child: GlassSurface(
               backgroundColor: AppColors.glassStrong,
-              blur: 24,
+              blur: 18,
               shadowStrength: 0.8,
               child: NavigationBar(
                 selectedIndex: _selectedIndex,

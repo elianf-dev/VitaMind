@@ -259,6 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
           AppSectionHeader(
             title: 'Current goals',
             actionLabel: _goals.isEmpty ? 'Add' : 'View all',
+            actionSemanticLabel: _goals.isEmpty ? 'Add goal' : 'View all goals',
             onAction: () => _openAndRefresh('/wellness-goals'),
           ),
           if (_loadingPersonalization)
@@ -387,6 +388,8 @@ class _QuickMoodButton extends StatelessWidget {
       button: true,
       enabled: onTap != null,
       label: 'Log mood: ${mood.label}',
+      // excludeSemantics drops the InkWell's tap, so expose it here.
+      onTap: onTap,
       excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
@@ -398,13 +401,17 @@ class _QuickMoodButton extends StatelessWidget {
             children: [
               Text(mood.emoji, style: const TextStyle(fontSize: 28)),
               const SizedBox(height: AppSpacing.xs),
-              Text(
-                mood.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.meta(
-                  context,
-                )?.copyWith(color: AppColors.bodyText),
+              // Five labels share one row, so at large text sizes shrink a
+              // long word ("Anxious") to fit instead of cutting it off.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  mood.label,
+                  maxLines: 1,
+                  style: AppTextStyles.meta(
+                    context,
+                  )?.copyWith(color: AppColors.bodyText),
+                ),
               ),
             ],
           ),
