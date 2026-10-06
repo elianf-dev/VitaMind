@@ -44,6 +44,7 @@ class GlassSurface extends StatefulWidget {
 
 class _GlassSurfaceState extends State<GlassSurface> {
   bool _pressed = false;
+  bool _focused = false;
 
   void _setPressed(bool value) {
     if (_pressed == value || widget.onTap == null) {
@@ -52,10 +53,24 @@ class _GlassSurfaceState extends State<GlassSurface> {
     setState(() => _pressed = value);
   }
 
+  void _setFocused(bool value) {
+    if (_focused != value) {
+      setState(() => _focused = value);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final highContrast = MediaQuery.highContrastOf(context);
+    final duration = reduceMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 150);
+
     final content = widget.onTap == null
-        ? widget.child
+        // Transparent Material so nested ListTiles and switches paint their
+        // ripples and focus highlights above the card fill.
+        ? Material(type: MaterialType.transparency, child: widget.child)
         : Semantics(
             button: true,
             label: widget.semanticLabel,
@@ -64,44 +79,77 @@ class _GlassSurfaceState extends State<GlassSurface> {
               child: InkWell(
                 onTap: widget.onTap,
                 onHighlightChanged: _setPressed,
+                onFocusChange: _setFocused,
                 overlayColor: WidgetStateProperty.all(Colors.transparent),
                 child: widget.child,
               ),
             ),
           );
 
+    final Color background;
+    if (highContrast) {
+      background = AppColors.highContrastSurface;
+    } else if (_pressed) {
+      background = AppColors.glassPressed;
+    } else {
+      background = widget.backgroundColor;
+    }
+
+    // The focus ring replaces the ink highlight that overlayColor hides.
+    final Border border;
+    if (_focused) {
+      border = Border.all(color: AppColors.focusRing, width: 2.5);
+    } else if (highContrast) {
+      border = Border.all(color: AppColors.highContrastBorder, width: 1.5);
+    } else {
+      border = Border.all(color: widget.borderColor);
+    }
+
+    final fill = AnimatedContainer(
+      duration: duration,
+      alignment: widget.alignment,
+      padding: widget.padding,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(widget.radius),
+        border: border,
+      ),
+      child: content,
+    );
+
     return Padding(
       padding: widget.margin,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: duration,
         curve: Curves.easeOut,
         width: widget.width,
         height: widget.height,
-        transform: Matrix4.translationValues(0, _pressed ? 1 : 0, 0),
+        transform: Matrix4.translationValues(
+          0,
+          _pressed && !reduceMotion ? 1 : 0,
+          0,
+        ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(widget.radius),
-          boxShadow: _pressed
+          boxShadow: highContrast
+              ? null
+              : _pressed
               ? AppShadows.pressed()
               : AppShadows.glass(strength: widget.shadowStrength),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(widget.radius),
-          child: BackdropFilter.grouped(
-            filter: ImageFilter.blur(sigmaX: widget.blur, sigmaY: widget.blur),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              alignment: widget.alignment,
-              padding: widget.padding,
-              decoration: BoxDecoration(
-                color: _pressed
-                    ? AppColors.glassPressed
-                    : widget.backgroundColor,
-                borderRadius: BorderRadius.circular(widget.radius),
-                border: Border.all(color: widget.borderColor),
-              ),
-              child: content,
-            ),
-          ),
+          // Blur only shows through a translucent fill, so high contrast
+          // (opaque fill) skips it.
+          child: highContrast
+              ? fill
+              : BackdropFilter.grouped(
+                  filter: ImageFilter.blur(
+                    sigmaX: widget.blur,
+                    sigmaY: widget.blur,
+                  ),
+                  child: fill,
+                ),
         ),
       ),
     );

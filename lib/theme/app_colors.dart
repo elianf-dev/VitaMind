@@ -25,7 +25,9 @@ class AppColors {
   static const Color shadow = Color(0xFF9DACA6);
   static const Color glassShadow = Color(0xFF82938D);
   static const Color text = Color(0xFF173B35);
-  static const Color mutedText = Color(0xFF5E746D);
+  // Darkened from #5E746D (4.0-4.6:1) to pass WCAG 4.5:1 on every surface
+  // and backdrop stop (lowest is 4.9:1 on recessed tiles).
+  static const Color mutedText = Color(0xFF52675F);
   static const Color bodyText = Color(0xFF34534B);
   static const Color mutedIcon = Color(0xFF7A918A);
   // Darkened from #D38A42 (2.6:1) to pass WCAG 3:1 for icons on cards.
@@ -38,6 +40,14 @@ class AppColors {
   static const Color purpleSoft = Color(0xD9E9E0EF);
   static const Color coral = Color(0xFFA84A28);
   static const Color disabled = Color(0xFF9EAAA6);
+
+  // System high-contrast mode: opaque surfaces and firm edges instead of glass.
+  static const Color highContrastSurface = Color(0xFFFFFFFF);
+  static const Color highContrastBackdrop = Color(0xFFEAF1EE);
+  static const Color highContrastBorder = Color(0xFF5E746D);
+
+  // Keyboard and switch-access focus outline (5.6:1 on cards).
+  static const Color focusRing = Color(0xFF0E6E7C);
 
   // Diverging mood scale: warm = unpleasant, gray = neutral, teal = pleasant.
   // Validated for CVD separation with the dataviz palette checks.

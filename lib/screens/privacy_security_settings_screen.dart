@@ -4,6 +4,7 @@ import '../models/check_in_settings.dart';
 import '../models/privacy_security_settings.dart';
 import '../services/local_storage_service.dart';
 import '../services/notification_service.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/disclaimer_card.dart';
 import '../widgets/vita_mind_buttons.dart';
@@ -88,6 +89,7 @@ class _PrivacySecuritySettingsScreenState
   Future<void> _confirmDeleteLocalData() async {
     final confirmed = await showDialog<bool>(
       context: context,
+      animationStyle: AppMotion.overlay(context),
       builder: (context) => AlertDialog(
         title: const Text('Delete local VitaMind data?'),
         content: const Text(

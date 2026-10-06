@@ -10,12 +10,17 @@ class AppSectionHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.actionLabel,
+    this.actionSemanticLabel,
     this.onAction,
   });
 
   final String title;
   final String? subtitle;
   final String? actionLabel;
+
+  /// Screen-reader label for the action when [actionLabel] alone is vague
+  /// (for example "Add" read out of context).
+  final String? actionSemanticLabel;
   final VoidCallback? onAction;
 
   @override
@@ -33,7 +38,13 @@ class AppSectionHeader extends StatelessWidget {
                 child: Text(title, style: AppTextStyles.sectionTitle(context)),
               ),
               if (hasAction)
-                TextButton(onPressed: onAction, child: Text(actionLabel!)),
+                TextButton(
+                  onPressed: onAction,
+                  child: Text(
+                    actionLabel!,
+                    semanticsLabel: actionSemanticLabel,
+                  ),
+                ),
             ],
           ),
           if (subtitle != null) ...[

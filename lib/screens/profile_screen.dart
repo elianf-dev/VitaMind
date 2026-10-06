@@ -7,9 +7,11 @@ import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_section_header.dart';
+import '../widgets/delete_account_dialog.dart';
 import '../widgets/vita_mind_buttons.dart';
 import '../widgets/vita_mind_card.dart';
 import '../widgets/vita_mind_page_header.dart';
@@ -108,84 +110,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (userId == null) {
       return;
     }
-    if (!widget.authService.canDeleteAccount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'For security, log out and log back in before deleting your account.',
-          ),
-        ),
-      );
-      return;
-    }
 
-    final confirmed = await showDialog<bool>(
+    final deleted = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete VitaMind account?'),
-        content: const Text(
-          'This permanently deletes your VitaMind account, its mood, symptom, journal, and reminder data in Firebase, and this profile’s data on this device.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete Account'),
-          ),
-        ],
+      animationStyle: AppMotion.overlay(context),
+      builder: (context) => DeleteAccountDialog(
+        email: widget.authService.userEmail,
+        onDelete: (password) => _deleteAccount(userId, password),
       ),
     );
-    if (confirmed != true || !mounted) {
-      return;
-    }
-    if (!widget.authService.canDeleteAccount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Your secure deletion session expired. Log out and back in, then try again.',
-          ),
-        ),
-      );
-      return;
-    }
-
-    // Firestore rules only allow this user to delete users/{userId} while
-    // still authenticated, so cloud data must be wiped before the Firebase
-    // Auth account (which signs the user out). If deleteAccount fails after
-    // this, the cloud wipe is not silently lost: the user is told exactly
-    // what happened so a retry is safe (deleteUserData is idempotent).
-    try {
-      await widget.firestoreService.deleteUserData(userId);
-    } on Object catch (error) {
-      debugPrint('VitaMind: failed to delete cloud data for $userId: $error');
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Could not reach the server to delete your cloud data. Check your connection and try again.',
-          ),
-        ),
-      );
-      return;
-    }
-
-    final error = await widget.authService.deleteAccount();
-    if (error != null) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Your cloud data was deleted, but the account itself could not be removed: $error Please try again.',
-          ),
-        ),
-      );
+    if (deleted != true || !mounted) {
       return;
     }
 
@@ -197,6 +131,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+  }
+
+  /// Confirms the password, then deletes cloud data and the account. Returns
+  /// an error for the dialog to show, or null on success.
+  Future<String?> _deleteAccount(String userId, String password) async {
+    final authError = await widget.authService.reauthenticate(password);
+    if (authError != null) {
+      return authError;
+    }
+
+    // Firestore rules only allow this user to delete users/{userId} while
+    // still authenticated, so cloud data must be wiped before the Firebase
+    // Auth account (which signs the user out). If deleteAccount fails after
+    // this, the user is told exactly what happened, and a retry is safe
+    // because deleteUserData is idempotent.
+    try {
+      await widget.firestoreService.deleteUserData(userId);
+    } on Object catch (error) {
+      debugPrint('VitaMind: failed to delete cloud data for $userId: $error');
+      return 'Could not reach the server to delete your cloud data. '
+          'Check your connection and try again.';
+    }
+
+    final error = await widget.authService.deleteAccount();
+    if (error != null) {
+      return 'Your cloud data was deleted, but the account itself could not '
+          'be removed: $error Please try again.';
+    }
+    return null;
   }
 
   Future<void> _updateCheckInSettings(CheckInSettings settings) async {
@@ -396,6 +359,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 DropdownButtonFormField<CheckInFrequency>(
                   key: ValueKey(_checkInSettings.frequency.name),
+                  // Fit the field so options wrap at large text sizes.
+                  isExpanded: true,
                   initialValue: _checkInSettings.frequency,
                   decoration: const InputDecoration(
                     labelText: 'Frequency',

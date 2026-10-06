@@ -183,7 +183,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   padding: AppSpacing.cardLarge,
                   backgroundColor: AppColors.glassStrong,
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 220),
                     switchInCurve: Curves.easeOut,
                     switchOutCurve: Curves.easeIn,
                     child: _mode == _AuthMode.welcome

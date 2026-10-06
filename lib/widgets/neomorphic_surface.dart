@@ -40,6 +40,7 @@ class NeomorphicSurface extends StatefulWidget {
 
 class _NeomorphicSurfaceState extends State<NeomorphicSurface> {
   bool _pressed = false;
+  bool _focused = false;
 
   void _setPressed(bool value) {
     if (_pressed == value || widget.onTap == null) {
@@ -48,21 +49,48 @@ class _NeomorphicSurfaceState extends State<NeomorphicSurface> {
     setState(() => _pressed = value);
   }
 
+  void _setFocused(bool value) {
+    if (_focused != value) {
+      setState(() => _focused = value);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final highContrast = MediaQuery.highContrastOf(context);
+
+    // The focus ring replaces the ink highlight that overlayColor hides.
+    final Border border;
+    if (_focused) {
+      border = Border.all(color: AppColors.focusRing, width: 2.5);
+    } else if (highContrast) {
+      border = Border.all(color: AppColors.highContrastBorder, width: 1.5);
+    } else {
+      border = Border.all(color: widget.borderColor);
+    }
+
     final surface = AnimatedContainer(
-      duration: const Duration(milliseconds: 140),
+      duration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 140),
       curve: Curves.easeOut,
       width: widget.width,
       height: widget.height,
       alignment: widget.alignment,
       padding: widget.padding,
-      transform: Matrix4.translationValues(0, _pressed ? 1 : 0, 0),
+      transform: Matrix4.translationValues(
+        0,
+        _pressed && !reduceMotion ? 1 : 0,
+        0,
+      ),
       decoration: BoxDecoration(
         color: _pressed ? AppColors.pressedSurface : widget.backgroundColor,
         borderRadius: BorderRadius.circular(widget.radius),
-        border: Border.all(color: widget.borderColor),
-        boxShadow: _pressed
+        border: border,
+        boxShadow: highContrast
+            ? null
+            : _pressed
             ? AppShadows.pressed()
             : AppShadows.raised(strength: widget.shadowStrength),
       ),
@@ -80,6 +108,7 @@ class _NeomorphicSurfaceState extends State<NeomorphicSurface> {
                 borderRadius: BorderRadius.circular(widget.radius),
                 overlayColor: WidgetStateProperty.all(Colors.transparent),
                 onHighlightChanged: _setPressed,
+                onFocusChange: _setFocused,
                 onTap: widget.onTap,
                 child: surface,
               ),

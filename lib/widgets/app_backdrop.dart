@@ -9,6 +9,14 @@ class AppBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // High contrast: a flat, quiet background behind the opaque surfaces.
+    if (MediaQuery.highContrastOf(context)) {
+      return ColoredBox(
+        color: AppColors.highContrastBackdrop,
+        child: BackdropGroup(child: child),
+      );
+    }
+
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(

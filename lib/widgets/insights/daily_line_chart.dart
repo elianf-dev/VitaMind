@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -62,17 +64,56 @@ class DailyLineChart extends StatefulWidget {
 }
 
 class _DailyLineChartState extends State<DailyLineChart> {
-  static const double _leftInset = 32;
+  static const double _baseLeftInset = 32;
   static const double _rightInset = 8;
 
   int? _selected;
+  bool _focused = false;
 
   @override
   void didUpdateWidget(DailyLineChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.values != widget.values) {
+    // Compare contents: the parent rebuilds the list on every setState, and
+    // an unrelated change (like a symptom chip) shouldn't clear the reading.
+    if (!listEquals(oldWidget.values, widget.values)) {
       _selected = null;
     }
+  }
+
+  /// Moves the selection to the previous (-1) or next (1) day that has a
+  /// value. With nothing selected, starts from the most recent day.
+  void _step(int direction) {
+    final index = _neighbor(direction);
+    if (index != null) {
+      setState(() => _selected = index);
+    }
+  }
+
+  int? _neighbor(int direction) {
+    final values = widget.values;
+    var index = _selected ?? (direction < 0 ? values.length : -1);
+    do {
+      index += direction;
+    } while (index >= 0 && index < values.length && values[index] == null);
+    return index >= 0 && index < values.length ? index : null;
+  }
+
+  String _describe(int index) =>
+      widget.describePoint(_dayAt(index), widget.values[index]!);
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      _step(-1);
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      _step(1);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 
   DateTime _dayAt(int index) {
@@ -84,13 +125,13 @@ class _DailyLineChartState extends State<DailyLineChart> {
     );
   }
 
-  void _selectAt(double dx, double width) {
+  void _selectAt(double dx, double width, double leftInset) {
     final count = widget.values.length;
     if (count == 0) {
       return;
     }
-    final plotWidth = width - _leftInset - _rightInset;
-    final fraction = ((dx - _leftInset) / plotWidth).clamp(0.0, 1.0);
+    final plotWidth = width - leftInset - _rightInset;
+    final fraction = ((dx - leftInset) / plotWidth).clamp(0.0, 1.0);
     final target = count == 1 ? 0 : (fraction * (count - 1)).round();
 
     int? nearest;
@@ -114,48 +155,93 @@ class _DailyLineChartState extends State<DailyLineChart> {
     final selected = _selected;
     final readout = selected == null
         ? 'Tap the chart to see a day.'
-        : widget.describePoint(_dayAt(selected), widget.values[selected]!);
+        : _describe(selected);
+    final next = _neighbor(1);
+    final previous = _neighbor(-1);
+
+    // Guide labels are painted, so apply the reader's text size and bold
+    // text setting by hand, and widen the label column to fit.
+    final textScaler = MediaQuery.textScalerOf(context);
+    final leftInset = textScaler
+        .scale(_baseLeftInset)
+        .clamp(_baseLeftInset, _baseLeftInset * 2.25);
+    var guideStyle =
+        AppTextStyles.meta(context) ?? const TextStyle(fontSize: 11);
+    if (MediaQuery.boldTextOf(context)) {
+      guideStyle = guideStyle.copyWith(fontWeight: FontWeight.bold);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Semantics(
-          liveRegion: true,
+        ExcludeSemantics(
           child: Text(readout, style: AppTextStyles.meta(context)),
         ),
         const SizedBox(height: AppSpacing.sm),
+        // Screen readers adjust the chart (swipe up or down on Android) to
+        // step through days; keyboards use the arrow keys.
         Semantics(
+          container: true,
           label: widget.semanticSummary,
+          value: selected == null ? null : readout,
+          // Flutter requires the neighboring readings alongside a value.
+          increasedValue: selected == null || next == null
+              ? null
+              : _describe(next),
+          decreasedValue: selected == null || previous == null
+              ? null
+              : _describe(previous),
+          hint: 'Adjust to move between days',
+          onIncrease: next == null ? null : () => _step(1),
+          onDecrease: previous == null ? null : () => _step(-1),
           child: ExcludeSemantics(
-            child: SizedBox(
-              height: widget.height,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final width = constraints.maxWidth;
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTapDown: (details) =>
-                        _selectAt(details.localPosition.dx, width),
-                    onHorizontalDragUpdate: (details) =>
-                        _selectAt(details.localPosition.dx, width),
-                    child: CustomPaint(
-                      size: Size(width, widget.height),
-                      painter: _DailyLinePainter(
-                        values: widget.values,
-                        minY: widget.minY,
-                        maxY: widget.maxY,
-                        color: widget.color,
-                        guides: widget.guides,
-                        selected: selected,
-                        leftInset: _leftInset,
-                        rightInset: _rightInset,
-                        guideStyle:
-                            AppTextStyles.meta(context) ??
-                            const TextStyle(fontSize: 11),
-                      ),
-                    ),
-                  );
-                },
+            child: Focus(
+              onKeyEvent: _onKey,
+              onFocusChange: (focused) => setState(() => _focused = focused),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.radius),
+                  border: Border.all(
+                    color: _focused ? AppColors.focusRing : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+                child: SizedBox(
+                  height: widget.height,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width = constraints.maxWidth;
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTapDown: (details) => _selectAt(
+                          details.localPosition.dx,
+                          width,
+                          leftInset,
+                        ),
+                        onHorizontalDragUpdate: (details) => _selectAt(
+                          details.localPosition.dx,
+                          width,
+                          leftInset,
+                        ),
+                        child: CustomPaint(
+                          size: Size(width, widget.height),
+                          painter: _DailyLinePainter(
+                            values: widget.values,
+                            minY: widget.minY,
+                            maxY: widget.maxY,
+                            color: widget.color,
+                            guides: widget.guides,
+                            selected: selected,
+                            leftInset: leftInset,
+                            rightInset: _rightInset,
+                            guideStyle: guideStyle,
+                            textScaler: textScaler,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
@@ -163,7 +249,7 @@ class _DailyLineChartState extends State<DailyLineChart> {
         const SizedBox(height: AppSpacing.xs),
         ExcludeSemantics(
           child: Padding(
-            padding: const EdgeInsets.only(left: _leftInset),
+            padding: EdgeInsets.only(left: leftInset),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -192,6 +278,7 @@ class _DailyLinePainter extends CustomPainter {
     required this.leftInset,
     required this.rightInset,
     required this.guideStyle,
+    required this.textScaler,
   });
 
   static const double _verticalInset = 10;
@@ -207,6 +294,7 @@ class _DailyLinePainter extends CustomPainter {
   final double leftInset;
   final double rightInset;
   final TextStyle guideStyle;
+  final TextScaler textScaler;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -234,6 +322,7 @@ class _DailyLinePainter extends CustomPainter {
       final label = TextPainter(
         text: TextSpan(text: guide.label, style: guideStyle),
         textDirection: TextDirection.ltr,
+        textScaler: textScaler,
       )..layout(maxWidth: leftInset - 4);
       label.paint(canvas, Offset(0, y - label.height / 2));
     }
@@ -309,6 +398,9 @@ class _DailyLinePainter extends CustomPainter {
         oldDelegate.selected != selected ||
         oldDelegate.color != color ||
         oldDelegate.minY != minY ||
-        oldDelegate.maxY != maxY;
+        oldDelegate.maxY != maxY ||
+        oldDelegate.leftInset != leftInset ||
+        oldDelegate.guideStyle != guideStyle ||
+        oldDelegate.textScaler != textScaler;
   }
 }

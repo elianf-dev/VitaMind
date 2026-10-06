@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/health_log_entry.dart';
 import '../services/local_storage_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/empty_state_card.dart';
@@ -45,6 +46,7 @@ class _HealthLogHistoryScreenState extends State<HealthLogHistoryScreen> {
   void _openLog(HealthLogEntry log) {
     showModalBottomSheet<void>(
       context: context,
+      sheetAnimationStyle: AppMotion.overlay(context),
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: AppColors.surface,

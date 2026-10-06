@@ -10,18 +10,11 @@ class AuthService extends ChangeNotifier {
 
   StreamSubscription<User?>? _authSubscription;
   User? _user;
-  DateTime? _lastAuthenticationAt;
 
   bool get isLoggedIn => _user != null;
   String? get userId => _user?.uid;
   String? get userEmail => _user?.email;
   bool get isEmailVerified => _user?.emailVerified ?? false;
-  bool get canDeleteAccount {
-    final authenticatedAt = _lastAuthenticationAt;
-    return _user != null &&
-        authenticatedAt != null &&
-        DateTime.now().difference(authenticatedAt) < const Duration(minutes: 4);
-  }
 
   Future<void> initialize() async {
     if (!firebaseAvailable) {
@@ -49,7 +42,6 @@ class AuthService extends ChangeNotifier {
         password: password,
       );
       _user = credential.user;
-      _lastAuthenticationAt = DateTime.now();
       notifyListeners();
       return null;
     } on FirebaseAuthException catch (error) {
@@ -78,7 +70,6 @@ class AuthService extends ChangeNotifier {
             password: password,
           );
       _user = credential.user;
-      _lastAuthenticationAt = DateTime.now();
       await _user?.sendEmailVerification();
       notifyListeners();
       return null;
@@ -137,6 +128,39 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  /// Confirms the signed-in user's password. Firebase only allows sensitive
+  /// actions like account deletion shortly after a sign-in, so this lets the
+  /// user prove it's them without signing out and back in.
+  Future<String?> reauthenticate(String password) async {
+    final user = _user;
+    final email = user?.email;
+    if (user == null || email == null) {
+      return 'No signed-in account was found.';
+    }
+    if (password.isEmpty) {
+      return 'Enter your password.';
+    }
+
+    try {
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: email, password: password),
+      );
+      return null;
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'wrong-password' ||
+          error.code == 'invalid-credential') {
+        return 'That password is incorrect.';
+      }
+      return _friendlyError(
+        error,
+        fallback: 'Unable to confirm your password.',
+      );
+    } on Object catch (error) {
+      debugPrint('VitaMind: reauthentication failed: $error');
+      return 'Something went wrong. Please check your connection and try again.';
+    }
+  }
+
   Future<String?> deleteAccount() async {
     if (_user == null) {
       return 'No signed-in account was found.';
@@ -145,7 +169,6 @@ class AuthService extends ChangeNotifier {
     try {
       await _user!.delete();
       _user = null;
-      _lastAuthenticationAt = null;
       notifyListeners();
       return null;
     } on FirebaseAuthException catch (error) {
@@ -161,7 +184,6 @@ class AuthService extends ChangeNotifier {
       await FirebaseAuth.instance.signOut();
     }
     _user = null;
-    _lastAuthenticationAt = null;
     notifyListeners();
   }
 
@@ -170,7 +192,6 @@ class AuthService extends ChangeNotifier {
       await FirebaseAuth.instance.signOut();
     }
     _user = null;
-    _lastAuthenticationAt = null;
     notifyListeners();
   }
 

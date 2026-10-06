@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/entry_merge.dart';
@@ -190,6 +191,7 @@ class _JournalScreenState extends State<JournalScreen> {
   void _openJournalEntry(JournalEntry entry) {
     showModalBottomSheet<void>(
       context: context,
+      sheetAnimationStyle: AppMotion.overlay(context),
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: AppColors.surface,

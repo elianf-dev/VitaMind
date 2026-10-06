@@ -29,6 +29,12 @@ class AppTheme {
     );
 
     return base.copyWith(
+      pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          for (final entry in const PageTransitionsTheme().builders.entries)
+            entry.key: _ReduceMotionTransitionsBuilder(entry.value),
+        },
+      ),
       scaffoldBackgroundColor: Colors.transparent,
       canvasColor: AppColors.glassStrong,
       splashColor: AppColors.primary.withValues(alpha: 0.08),
@@ -244,6 +250,34 @@ class AppTheme {
         thickness: 1,
         space: 1,
       ),
+    );
+  }
+}
+
+/// Uses the platform's usual page transition unless the system asks to
+/// reduce motion, in which case the new screen appears without animating.
+class _ReduceMotionTransitionsBuilder extends PageTransitionsBuilder {
+  const _ReduceMotionTransitionsBuilder(this.platformBuilder);
+
+  final PageTransitionsBuilder platformBuilder;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return child;
+    }
+    return platformBuilder.buildTransitions(
+      route,
+      context,
+      animation,
+      secondaryAnimation,
+      child,
     );
   }
 }

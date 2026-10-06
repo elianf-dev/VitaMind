@@ -183,6 +183,8 @@ class _WellnessGoalsScreenState extends State<WellnessGoalsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         DropdownButtonFormField<String>(
+                          // Fit the field so options wrap at large text sizes.
+                          isExpanded: true,
                           initialValue: _targetFrequency,
                           decoration: const InputDecoration(
                             labelText: 'Frequency for new goals',

@@ -120,10 +120,20 @@ class _MoodCalendarState extends State<MoodCalendar> {
       children: [
         Row(
           children: [
-            IconButton(
-              tooltip: 'Previous month',
-              onPressed: canGoBack ? () => _shiftMonth(-1) : null,
-              icon: const Icon(Icons.chevron_left),
+            // One labeled node, because a disabled IconButton drops its
+            // tooltip from semantics.
+            Semantics(
+              container: true,
+              button: true,
+              enabled: canGoBack,
+              label: 'Previous month',
+              onTap: canGoBack ? () => _shiftMonth(-1) : null,
+              excludeSemantics: true,
+              child: IconButton(
+                tooltip: 'Previous month',
+                onPressed: canGoBack ? () => _shiftMonth(-1) : null,
+                icon: const Icon(Icons.chevron_left),
+              ),
             ),
             Expanded(
               child: Semantics(
@@ -135,10 +145,18 @@ class _MoodCalendarState extends State<MoodCalendar> {
                 ),
               ),
             ),
-            IconButton(
-              tooltip: 'Next month',
-              onPressed: canGoForward ? () => _shiftMonth(1) : null,
-              icon: const Icon(Icons.chevron_right),
+            Semantics(
+              container: true,
+              button: true,
+              enabled: canGoForward,
+              label: 'Next month',
+              onTap: canGoForward ? () => _shiftMonth(1) : null,
+              excludeSemantics: true,
+              child: IconButton(
+                tooltip: 'Next month',
+                onPressed: canGoForward ? () => _shiftMonth(1) : null,
+                icon: const Icon(Icons.chevron_right),
+              ),
             ),
           ],
         ),
@@ -160,8 +178,8 @@ class _MoodCalendarState extends State<MoodCalendar> {
         const SizedBox(height: AppSpacing.xs),
         GridView.count(
           crossAxisCount: 7,
-          mainAxisSpacing: 2,
-          crossAxisSpacing: 2,
+          // No grid gaps: each cell pads itself for its focus ring, which
+          // keeps the visual spacing while giving taps the full width.
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: [
@@ -205,33 +223,94 @@ class _MoodCalendarState extends State<MoodCalendar> {
         ? (isFuture ? 'upcoming' : 'no check-in')
         : '${band!.label}: ${dayMood.entries.map((entry) => entry.label).join(', ')}';
 
+    final onTap = isFuture ? null : () => setState(() => _selectedDay = day);
+
     return Semantics(
       button: !isFuture,
       selected: isSelected,
       label: '${_dayLabel(day)}${isToday ? ', today' : ''}, $description',
+      // excludeSemantics drops the InkWell's tap, so expose it here.
+      onTap: onTap,
       excludeSemantics: true,
-      child: GestureDetector(
-        onTap: isFuture ? null : () => setState(() => _selectedDay = day),
+      child: _DayCell(
+        day: day.day,
+        band: band,
+        isFuture: isFuture,
+        isToday: isToday,
+        isSelected: isSelected,
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// A focusable calendar day. The outer ring shows keyboard focus without
+/// hiding the selected or today border inside it.
+class _DayCell extends StatefulWidget {
+  const _DayCell({
+    required this.day,
+    required this.band,
+    required this.isFuture,
+    required this.isToday,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final int day;
+  final MoodBand? band;
+  final bool isFuture;
+  final bool isToday;
+  final bool isSelected;
+  final VoidCallback? onTap;
+
+  @override
+  State<_DayCell> createState() => _DayCellState();
+}
+
+class _DayCellState extends State<_DayCell> {
+  bool _focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final band = widget.band;
+    final highContrast = MediaQuery.highContrastOf(context);
+    final emptyBorderColor = highContrast
+        ? AppColors.highContrastBorder
+        : AppColors.mutedIcon.withValues(alpha: 0.5);
+
+    return InkWell(
+      onTap: widget.onTap,
+      onFocusChange: (focused) => setState(() => _focused = focused),
+      borderRadius: BorderRadius.circular(AppSpacing.radius + 2),
+      child: Container(
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppSpacing.radius + 2),
+          border: Border.all(
+            color: _focused ? AppColors.focusRing : Colors.transparent,
+            width: 2,
+          ),
+        ),
         child: Container(
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: band == null ? null : moodBandColor(band),
             borderRadius: BorderRadius.circular(AppSpacing.radius),
-            border: isSelected
+            border: widget.isSelected
                 ? Border.all(color: AppColors.text, width: 2)
-                : isToday
+                : widget.isToday
                 ? Border.all(color: AppColors.primary, width: 2)
-                : band == null && !isFuture
-                ? Border.all(color: AppColors.mutedIcon.withValues(alpha: 0.5))
+                : band == null && !widget.isFuture
+                ? Border.all(color: emptyBorderColor)
                 : null,
           ),
           child: Text(
-            '${day.day}',
+            '${widget.day}',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: band == null
-                  ? (isFuture ? AppColors.disabled : AppColors.mutedText)
+                  ? (widget.isFuture ? AppColors.disabled : AppColors.mutedText)
                   : _inkOn(band),
             ),
           ),
@@ -252,7 +331,8 @@ class _MoodLegend extends StatelessWidget {
         children: [
           swatch,
           const SizedBox(width: AppSpacing.xs),
-          Text(label, style: AppTextStyles.meta(context)),
+          // Flexible so a long label wraps at large text sizes.
+          Flexible(child: Text(label, style: AppTextStyles.meta(context))),
         ],
       );
     }
