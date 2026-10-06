@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Adaptive icon BACKGROUND. From vitamind-logo.svg: a coral tulip held by two teal leaves on a
+       light mint background. Colors follow lib/theme/app_colors.dart.
+       The mark stays inside Android's adaptive-icon safe zone. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F4FBF8"/>
+      <stop offset="1" stop-color="#CFE9E2"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.22" cy="0.12" r="0.75">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF9A6E" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FF9A6E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="leafL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1FA7AD"/>
+      <stop offset="1" stop-color="#0E6E7C"/>
+    </linearGradient>
+    <linearGradient id="leafR" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5CC2BC"/>
+      <stop offset="1" stop-color="#0E6E7C"/>
+    </linearGradient>
+    <linearGradient id="petalBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F59A72"/>
+      <stop offset="1" stop-color="#C9472C"/>
+    </linearGradient>
+    <radialGradient id="petalFront" cx="0.38" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#FFD9C2"/>
+      <stop offset="0.55" stop-color="#FF9A6E"/>
+      <stop offset="1" stop-color="#E8603F"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#sheen)"/>
+
+</svg>

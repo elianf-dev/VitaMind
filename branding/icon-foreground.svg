@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Adaptive icon FOREGROUND (transparent). Same mark as vitamind-logo.svg: a coral tulip held by two teal leaves on a
+       light mint background. Colors follow lib/theme/app_colors.dart.
+       The mark stays inside Android's adaptive-icon safe zone. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F4FBF8"/>
+      <stop offset="1" stop-color="#CFE9E2"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.22" cy="0.12" r="0.75">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF9A6E" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FF9A6E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="leafL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1FA7AD"/>
+      <stop offset="1" stop-color="#0E6E7C"/>
+    </linearGradient>
+    <linearGradient id="leafR" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5CC2BC"/>
+      <stop offset="1" stop-color="#0E6E7C"/>
+    </linearGradient>
+    <linearGradient id="petalBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F59A72"/>
+      <stop offset="1" stop-color="#C9472C"/>
+    </linearGradient>
+    <radialGradient id="petalFront" cx="0.38" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#FFD9C2"/>
+      <stop offset="0.55" stop-color="#FF9A6E"/>
+      <stop offset="1" stop-color="#E8603F"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Mark -->
+  <circle cx="512" cy="372" r="190" fill="url(#glow)"/>
+  <path d="M512 452 C 506 560, 518 680, 512 784" fill="none" stroke="#1FA7AD" stroke-width="16" stroke-linecap="round"/>
+  <path d="M500 452 C 452 440, 420 400, 420 352 C 420 314, 428 290, 432 262 C 470 300, 506 340, 516 400 C 520 425, 512 445, 500 452 Z" fill="url(#petalBack)"/>
+  <path d="M524 452 C 572 440, 604 400, 604 352 C 604 314, 596 290, 592 262 C 554 300, 518 340, 508 400 C 504 425, 512 445, 524 452 Z" fill="url(#petalBack)"/>
+  <path d="M512 792 C 430 772, 252 702, 222 520 C 212 456, 232 400, 264 370 C 272 470, 360 560, 440 612 C 486 642, 508 702, 512 792 Z" fill="url(#leafL)"/>
+  <path d="M512 792 C 594 772, 772 702, 802 520 C 812 456, 792 400, 760 370 C 752 470, 664 560, 584 612 C 538 642, 516 702, 512 792 Z" fill="url(#leafR)"/>
+  <path d="M512 212 C 562 290, 594 334, 594 378 C 594 424, 557 458, 512 458 C 467 458, 430 424, 430 378 C 430 334, 462 290, 512 212 Z" fill="url(#petalFront)"/>
+  <path d="M500 446 C 488 402, 490 342, 506 270" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.3"/>
+  <path d="M526 446 C 538 404, 536 346, 520 280" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.3"/>
+  <ellipse cx="482" cy="350" rx="15" ry="34" transform="rotate(-18 482 350)" fill="#FFFFFF" opacity="0.75"/>
+  <path d="M566 392 C 562 424, 540 444, 514 448" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.45"/>
+  <path d="M642 210 Q642 236 668 236 Q642 236 642 262 Q642 236 616 236 Q642 236 642 210 Z" fill="#F08A62"/>
+  <path d="M392 272 Q392 288 408 288 Q392 288 392 304 Q392 288 376 288 Q392 288 392 272 Z" fill="#F08A62" opacity="0.85"/>
+</svg>

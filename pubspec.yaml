@@ -25,6 +25,7 @@ dependencies:
   url_launcher: ^6.3.2
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
@@ -62,3 +63,17 @@ flutter:
           weight: 700
         - asset: assets/fonts/Inter-Variable.ttf
           weight: 800
+
+# App icon, generated from branding/ (sources: branding/*.svg).
+# Regenerate after changing the art: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "branding/icon-full-1024.png"
+  min_sdk_android: 24
+  adaptive_icon_background: "branding/icon-background-1024.png"
+  adaptive_icon_foreground: "branding/icon-foreground-1024.png"
+  # Android shows only the middle 2/3 of the foreground; a small inset keeps
+  # the leaves clear of circular masks.
+  adaptive_icon_foreground_inset: 8
+  adaptive_icon_monochrome: "branding/icon-monochrome-1024.png"
