@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../data/app_links.dart';
 import '../models/check_in_settings.dart';
 import '../models/privacy_security_settings.dart';
 import '../services/local_storage_service.dart';
@@ -129,6 +131,18 @@ class _PrivacySecuritySettingsScreenState
     );
   }
 
+  Future<void> _openPrivacyPolicy() async {
+    final opened = await launchUrl(
+      AppLinks.privacyPolicy,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && mounted) {
+      _showPlaceholder(
+        'Could not open the privacy policy. Visit ${AppLinks.privacyPolicy}',
+      );
+    }
+  }
+
   void _showPlaceholder(String message) {
     ScaffoldMessenger.of(
       context,
@@ -237,6 +251,27 @@ class _PrivacySecuritySettingsScreenState
                           // TODO: Add a user-controlled encrypted health data export.
                           _showPlaceholder('Data export will be added later.');
                         },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _SettingsCard(
+                    children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          Icons.policy_outlined,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        title: const Text('Privacy Policy'),
+                        subtitle: const Text(
+                          'What VitaMind stores, where, and how to delete it.',
+                        ),
+                        trailing: const Icon(
+                          Icons.open_in_new,
+                          semanticLabel: 'Opens in your browser',
+                        ),
+                        onTap: _openPrivacyPolicy,
                       ),
                     ],
                   ),
