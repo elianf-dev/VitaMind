@@ -222,20 +222,6 @@ class _PrivacySecuritySettingsScreenState
                         },
                       ),
                       const Divider(height: 18),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Consent to future AI features'),
-                        subtitle: const Text(
-                          'Not needed for the free source-supported Health Log Explainer.',
-                        ),
-                        value: _settings.aiHealthConsent,
-                        onChanged: (value) {
-                          _updateSettings(
-                            _settings.copyWith(aiHealthConsent: value),
-                          );
-                        },
-                      ),
-                      const Divider(height: 18),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: Icon(

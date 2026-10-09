@@ -178,6 +178,13 @@ class _WellnessGoalsScreenState extends State<WellnessGoalsScreen> {
                     subtitle:
                         'Start with a few goals that feel useful. You can change them any time.',
                   ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    child: Text(
+                      'Stored on this device only.',
+                      style: AppTextStyles.supportiveBody(context),
+                    ),
+                  ),
                   VitaMindCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

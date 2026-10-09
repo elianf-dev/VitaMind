@@ -68,8 +68,7 @@ class OnboardingIntroScreen extends StatelessWidget {
                 const _IntroPoint(
                   icon: Icons.lock_outline,
                   title: 'Privacy choices',
-                  text:
-                      'Control local privacy choices and future AI consent placeholders.',
+                  text: 'Control local privacy choices.',
                 ),
                 const SizedBox(height: 18),
                 FilledButton.icon(

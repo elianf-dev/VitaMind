@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../models/check_in_settings.dart';
-import '../models/privacy_security_settings.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
@@ -37,7 +36,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   CheckInSettings _checkInSettings = CheckInSettings.defaults();
-  PrivacySecuritySettings _privacySettings = PrivacySecuritySettings.defaults();
   bool _loadingSettings = true;
   bool _savingNotificationSettings = false;
 
@@ -51,8 +49,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final userId = widget.authService.userId;
     final localSettings = await widget.localStorageService
         .loadCheckInSettings();
-    final privacySettings = await widget.localStorageService
-        .loadPrivacySettings();
     var settings = localSettings;
 
     if (userId != null && widget.firestoreService.enabled) {
@@ -75,7 +71,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() {
       _checkInSettings = settings;
-      _privacySettings = privacySettings;
       _loadingSettings = false;
     });
   }
@@ -400,25 +395,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           VitaMindSettingsTile(
             icon: Icons.lock_outline,
             title: 'Privacy & Security',
-            subtitle: 'Future AI consent and local data controls',
+            subtitle: 'Local data controls and privacy policy',
             onTap: () => _openSettingsRoute('/privacy-security'),
-          ),
-          VitaMindSettingsTile(
-            icon: _privacySettings.aiHealthConsent
-                ? Icons.psychology_alt
-                : Icons.psychology_alt_outlined,
-            title: 'Future AI Consent',
-            subtitle: _privacySettings.aiHealthConsent
-                ? 'On for future VitaMind Plus AI features.'
-                : 'Off. Free Health Log Explainer still works.',
-            onTap: () => _openSettingsRoute('/privacy-security'),
-          ),
-          const AppSectionHeader(title: 'Plan'),
-          VitaMindSettingsTile(
-            icon: Icons.workspace_premium_outlined,
-            title: 'VitaMind Plus',
-            subtitle: 'Planned AI summaries, reports, and cloud sync',
-            onTap: () => _openSettingsRoute('/vitamind-plus'),
           ),
           const AppSectionHeader(title: 'App'),
           VitaMindSettingsTile(

@@ -331,6 +331,13 @@ class _AuthForm extends StatelessWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
+        if (!isLogin) ...[
+          const SizedBox(height: 12),
+          const _AuthMessage(
+            text:
+                "Used VitaMind as a guest? Those entries stay on this device and won't move to your new account.",
+          ),
+        ],
         const SizedBox(height: 14),
         TextField(
           controller: emailController,

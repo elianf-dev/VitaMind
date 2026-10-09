@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/check_in_settings.dart';
 import '../../models/diagnosed_condition.dart';
-import '../../models/privacy_security_settings.dart';
 import '../../models/wellness_goal.dart';
 import '../../services/local_storage_service.dart';
 import '../../services/notification_service.dart';
@@ -29,7 +28,6 @@ class OnboardingSummaryScreen extends StatefulWidget {
 class _OnboardingSummaryScreenState extends State<OnboardingSummaryScreen> {
   List<DiagnosedCondition> _conditions = [];
   List<WellnessGoal> _goals = [];
-  PrivacySecuritySettings _privacySettings = PrivacySecuritySettings.defaults();
   CheckInSettings _checkInSettings = CheckInSettings.defaults();
   bool _loading = true;
   bool _finishing = false;
@@ -44,7 +42,6 @@ class _OnboardingSummaryScreenState extends State<OnboardingSummaryScreen> {
     final results = await Future.wait([
       widget.localStorageService.loadDiagnosedConditions(),
       widget.localStorageService.loadWellnessGoals(),
-      widget.localStorageService.loadPrivacySettings(),
       widget.localStorageService.loadCheckInSettings(),
     ]);
 
@@ -55,8 +52,7 @@ class _OnboardingSummaryScreenState extends State<OnboardingSummaryScreen> {
     setState(() {
       _conditions = results[0] as List<DiagnosedCondition>;
       _goals = results[1] as List<WellnessGoal>;
-      _privacySettings = results[2] as PrivacySecuritySettings;
-      _checkInSettings = results[3] as CheckInSettings;
+      _checkInSettings = results[2] as CheckInSettings;
       _loading = false;
     });
   }
@@ -127,13 +123,6 @@ class _OnboardingSummaryScreenState extends State<OnboardingSummaryScreen> {
                     value: _checkInSettings.enabled
                         ? '${_checkInSettings.frequency.label} at ${_formatTime(context, _checkInSettings)}'
                         : 'Daily check-ins are off.',
-                  ),
-                  _SummaryCard(
-                    icon: Icons.psychology_alt_outlined,
-                    title: 'Future AI consent',
-                    value: _privacySettings.aiHealthConsent
-                        ? 'Consent is on for future VitaMind Plus AI features.'
-                        : 'Consent is off. The free Health Log Explainer still works.',
                   ),
                   const SizedBox(height: 10),
                   const DisclaimerCard(),

@@ -146,7 +146,7 @@ class _HealthLogExplainerScreenState extends State<HealthLogExplainerScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'AI Explainer',
+                          'Source-supported',
                           style: AppTextStyles.eyebrow(color: AppColors.coral),
                         ),
                         const SizedBox(height: 4),

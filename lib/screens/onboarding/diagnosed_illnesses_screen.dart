@@ -204,6 +204,13 @@ class _DiagnosedIllnessesScreenState extends State<DiagnosedIllnessesScreen> {
                     subtitle:
                         'Only add conditions you have already been diagnosed with or personally want to track.',
                   ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    child: Text(
+                      'Stored on this device only.',
+                      style: AppTextStyles.supportiveBody(context),
+                    ),
+                  ),
                   VitaMindCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

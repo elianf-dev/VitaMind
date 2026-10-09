@@ -16,7 +16,6 @@ import 'screens/support_screen.dart';
 import 'screens/symptom_tracker_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/wellness_goals_screen.dart';
-import 'screens/vitamind_plus_screen.dart';
 import 'services/auth_service.dart';
 import 'services/check_in_restore.dart';
 import 'services/firebase_bootstrap_service.dart';
@@ -141,7 +140,6 @@ class VitaMindApp extends StatelessWidget {
           localStorageService: localStorageService,
           notificationService: notificationService,
         ),
-        '/vitamind-plus': (context) => const VitaMindPlusScreen(),
         SupportScreen.routeName: (context) => const SupportScreen(),
       },
     );

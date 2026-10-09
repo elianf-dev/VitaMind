@@ -29,3 +29,6 @@ ios/Flutter/flutter_export_environment.sh
 firebase-debug.log
 firebase-debug.*.log
 firepit-log.txt
+
+# Private Play Console notes (the repo is public)
+release/

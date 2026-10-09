@@ -315,6 +315,5 @@ const _secondaryRoutes = [
   '/diagnosed-conditions',
   '/wellness-goals',
   '/privacy-security',
-  '/vitamind-plus',
   '/support',
 ];
