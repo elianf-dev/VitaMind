@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/crisis_support_card.dart';
 import '../widgets/empty_state_card.dart';
 import '../widgets/trusted_source_list.dart';
 import '../widgets/vita_mind_card.dart';
@@ -171,6 +172,7 @@ class _HealthLogEntryDetail extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
+            if (log.response.crisisDetected) const CrisisSupportCard(),
             _DetailSection(
               icon: Icons.edit_note_outlined,
               title: 'What you entered',

@@ -153,4 +153,57 @@ void main() {
       isFalse,
     );
   });
+
+  group('crisisDetected (A1)', () {
+    test('a crisis phrase sets crisisDetected', () async {
+      final response = await service.explainHealthLog(
+        request(symptoms: 'Honestly I just want to die'),
+      );
+
+      expect(response.crisisDetected, isTrue);
+    });
+
+    test('an ordinary log leaves crisisDetected false', () async {
+      final response = await service.explainHealthLog(
+        request(symptoms: 'Headache and nausea'),
+      );
+
+      expect(response.crisisDetected, isFalse);
+    });
+
+    test('988 stays first in warningSigns when the sudden headache and '
+        'testicle rules also match', () async {
+      final response = await service.explainHealthLog(
+        request(
+          symptoms:
+              'Sudden worst headache of my life, testicle pain, and I want to '
+              'kill myself',
+        ),
+      );
+
+      expect(response.crisisDetected, isTrue);
+      expect(response.warningSigns.first, contains('988'));
+      // The other urgent-care reminders are still there, after 988.
+      expect(
+        response.warningSigns.any((sign) => sign.contains('sudden, extremely')),
+        isTrue,
+      );
+      expect(
+        response.warningSigns.any((sign) => sign.contains('testicle pain')),
+        isTrue,
+      );
+      expect(
+        response.warningSigns.where((sign) => sign.contains('988')),
+        hasLength(1),
+      );
+    });
+
+    test('988 stays first with only the sudden headache rule', () async {
+      final response = await service.explainHealthLog(
+        request(symptoms: 'sudden worst headache, I want to die'),
+      );
+
+      expect(response.warningSigns.first, contains('988'));
+    });
+  });
 }

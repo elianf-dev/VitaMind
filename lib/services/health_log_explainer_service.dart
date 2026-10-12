@@ -97,12 +97,6 @@ class HealthLogExplainerService {
 
     final mentionsImmediateMentalHealthRisk =
         _mentionsImmediateMentalHealthRisk(combinedText);
-    if (mentionsImmediateMentalHealthRisk) {
-      warningSigns.insert(
-        0,
-        'If you may hurt yourself or someone else, call local emergency services or go to the nearest emergency department now. In the U.S., you can call or text 988 to reach the 988 Suicide & Crisis Lifeline any time.',
-      );
-    }
 
     if (combinedText.contains('headache') &&
         (combinedText.contains('sudden') ||
@@ -119,6 +113,15 @@ class HealthLogExplainerService {
       warningSigns.insert(
         0,
         'Seek urgent care right away for sudden, severe, or worsening testicle pain, swelling, fever, nausea, vomiting, or pain after an injury.',
+      );
+    }
+
+    // Insert the crisis line last so it stays at index 0 even when the
+    // headache or testicle reminders above also match.
+    if (mentionsImmediateMentalHealthRisk) {
+      warningSigns.insert(
+        0,
+        'If you may hurt yourself or someone else, call local emergency services or go to the nearest emergency department now. In the U.S., you can call or text 988 to reach the 988 Suicide & Crisis Lifeline any time.',
       );
     }
 
@@ -157,6 +160,7 @@ class HealthLogExplainerService {
         ),
       ],
       source: HealthLogResponseSource.sourceSupported,
+      crisisDetected: mentionsImmediateMentalHealthRisk,
     );
   }
 

@@ -12,6 +12,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_section_header.dart';
+import '../widgets/crisis_support_card.dart';
 import '../widgets/disclaimer_card.dart';
 import '../widgets/vita_mind_buttons.dart';
 import '../widgets/vita_mind_card.dart';
@@ -240,6 +241,7 @@ class _HealthLogExplainerScreenState extends State<HealthLogExplainerScreen> {
                   ),
                   if (_response != null) ...[
                     const SizedBox(height: AppSpacing.xxl),
+                    if (_response!.crisisDetected) const CrisisSupportCard(),
                     const _ResponseSourceBanner(),
                     const SizedBox(height: AppSpacing.sm),
                     _HealthResultCards(response: _response!),

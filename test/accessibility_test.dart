@@ -272,6 +272,51 @@ void main() {
     expect(tester.getTopLeft(find.byType(BottomSheet)), firstFrame);
   });
 
+  testWidgets('pinned crisis card is one live region with labeled buttons', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await _pumpDashboard(tester, tall: true);
+    tester
+        .state<NavigatorState>(find.byType(Navigator).first)
+        .pushNamed('/health-log-explainer');
+    await _settle(tester);
+
+    await tester.enterText(
+      find.byType(TextField).first,
+      'Honestly I just want to die',
+    );
+    final explain = find.text('Explain Health Log');
+    await tester.ensureVisible(explain);
+    await tester.pump();
+    await tester.tap(explain);
+    await _settle(tester);
+
+    final card = find.bySemanticsLabel(RegExp('^If you might be in crisis'));
+    await tester.ensureVisible(card);
+    await tester.pump();
+    expect(card, findsOneWidget);
+    expect(tester.getSemantics(card), isSemantics(isLiveRegion: true));
+    // Title and body are read as one announcement.
+    expect(tester.getSemantics(card).label, contains('call or text 988'));
+    for (final label in ['Call 988', 'Text 988', 'Need help now']) {
+      expect(
+        tester.getSemantics(
+          find.descendant(
+            of: find.byKey(const ValueKey('crisis-support-card')),
+            matching: find.bySemanticsLabel(label),
+          ),
+        ),
+        isSemantics(isButton: true, hasTapAction: true),
+        reason: label,
+      );
+    }
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(textContrastGuideline));
+    handle.dispose();
+  });
+
   for (final largeText in [false, true]) {
     testWidgets('secondary screens meet guidelines'
         '${largeText ? ' at 2x text with high contrast' : ''}', (tester) async {

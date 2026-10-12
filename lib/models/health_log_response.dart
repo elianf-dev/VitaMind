@@ -12,6 +12,7 @@ class HealthLogResponse {
     required this.disclaimer,
     this.trustedSources = const [],
     this.source = HealthLogResponseSource.sourceSupported,
+    this.crisisDetected = false,
   });
 
   final String summary;
@@ -24,6 +25,10 @@ class HealthLogResponse {
   final String disclaimer;
   final List<TrustedHealthSource> trustedSources;
   final HealthLogResponseSource source;
+
+  /// True when the log matched the crisis phrase check, so the screens pin
+  /// the 988 card above the results. Older saved entries read as false.
+  final bool crisisDetected;
 
   factory HealthLogResponse.fromJson(Map<String, dynamic> json) {
     return HealthLogResponse(
@@ -39,6 +44,7 @@ class HealthLogResponse {
           : _stringValue(json['disclaimer']),
       trustedSources: _sourceList(json['trustedSources']),
       source: _sourceFromJson(json['source']),
+      crisisDetected: json['crisisDetected'] == true,
     );
   }
 
@@ -56,6 +62,7 @@ class HealthLogResponse {
           .map((source) => source.toJson())
           .toList(),
       'source': source.name,
+      'crisisDetected': crisisDetected,
     };
   }
 
