@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/notification_service.dart';
+import '../services/sync_coordinator.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
@@ -23,12 +24,14 @@ class ProfileScreen extends StatefulWidget {
     required this.firestoreService,
     required this.localStorageService,
     required this.notificationService,
+    required this.syncCoordinator,
   });
 
   final AuthService authService;
   final FirestoreService firestoreService;
   final LocalStorageService localStorageService;
   final NotificationService notificationService;
+  final SyncCoordinator syncCoordinator;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -78,7 +81,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _logout(BuildContext context) async {
     // Stop this profile's reminders; the next profile restores its own on entry.
     await widget.notificationService.cancelAllCheckIns();
+    final userId = widget.authService.userId;
     await widget.authService.signOut();
+    if (userId != null) {
+      // The next sign-in (same or different user) starts with a fresh read.
+      widget.syncCoordinator.clearUser(userId);
+    }
     widget.localStorageService.setProfileId(null);
     await widget.localStorageService.saveGuestSession(false);
     if (!context.mounted) {
@@ -118,6 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
+    widget.syncCoordinator.clearUser(userId);
     await widget.localStorageService.clearLocalHealthData();
     await widget.notificationService.cancelAllCheckIns();
     widget.localStorageService.setProfileId(null);
@@ -141,6 +150,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Auth account (which signs the user out). If deleteAccount fails after
     // this, the user is told exactly what happened, and a retry is safe
     // because deleteUserData is idempotent.
+    //
+    // Stop this user's background syncs first, and wait for any that are
+    // running, so no backfill re-uploads entries after the wipe (SEC-S2-2).
+    await widget.syncCoordinator.clearUserAndSettle(userId);
     try {
       await widget.firestoreService.deleteUserData(userId);
     } on Object catch (error) {

@@ -9,6 +9,7 @@ import 'package:vitamind/services/encrypted_health_storage.dart';
 import 'package:vitamind/services/firestore_service.dart';
 import 'package:vitamind/services/local_storage_service.dart';
 import 'package:vitamind/services/notification_service.dart';
+import 'package:vitamind/services/sync_coordinator.dart';
 import 'package:vitamind/widgets/vita_mind_buttons.dart';
 
 Future<LocalStorageService> _storage() async {
@@ -100,6 +101,7 @@ void main() {
         MoodTrackerScreen(
           authService: AuthService(firebaseAvailable: false),
           firestoreService: const FirestoreService(enabled: false),
+          syncCoordinator: SyncCoordinator(),
           localStorageService: storage,
         ),
       ),

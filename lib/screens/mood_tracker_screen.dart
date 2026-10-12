@@ -6,9 +6,9 @@ import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/mood_log_service.dart';
+import '../services/sync_coordinator.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
-import '../utils/entry_merge.dart';
 import '../widgets/vita_mind_buttons.dart';
 import '../widgets/vita_mind_card.dart';
 import '../widgets/vita_mind_page_header.dart';
@@ -21,11 +21,13 @@ class MoodTrackerScreen extends StatefulWidget {
     required this.authService,
     required this.firestoreService,
     required this.localStorageService,
+    required this.syncCoordinator,
   });
 
   final AuthService authService;
   final FirestoreService firestoreService;
   final LocalStorageService localStorageService;
+  final SyncCoordinator syncCoordinator;
 
   @override
   State<MoodTrackerScreen> createState() => _MoodTrackerScreenState();
@@ -53,35 +55,14 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
   }
 
   Future<void> _loadEntries() async {
-    final userId = widget.authService.userId;
-    final localEntries = await widget.localStorageService.loadMoodEntries();
-    var entries = localEntries;
-    if (userId != null && widget.firestoreService.enabled) {
-      try {
-        final cloudEntries = await widget.firestoreService.loadMoodEntries(
-          userId,
-        );
-        entries = mergeEntriesById(
-          localEntries: localEntries,
-          cloudEntries: cloudEntries,
-          idOf: (entry) => entry.id,
-          createdAtOf: (entry) => entry.createdAt,
-        );
-        await widget.localStorageService.saveMoodEntries(entries);
-
-        final cloudIds = cloudEntries.map((entry) => entry.id).toSet();
-        await Future.wait(
-          localEntries
-              .where((entry) => !cloudIds.contains(entry.id))
-              .map(
-                (entry) => widget.firestoreService.saveMoodEntry(userId, entry),
-              ),
-        );
-      } on Object catch (error) {
-        debugPrint('VitaMind: failed to sync mood entries: $error');
-        // Keep the tracker usable if Firestore is offline or rules need work.
-      }
-    }
+    // Renders local entries first. The full cloud read happens at most once
+    // per signed-in session (see SyncCoordinator); failures keep local data.
+    final entries = await widget.syncCoordinator.loadMoodEntries(
+      userId: widget.authService.userId,
+      firestoreService: widget.firestoreService,
+      localStorageService: widget.localStorageService,
+      onLocalLoaded: _showEntries,
+    );
 
     if (!mounted) {
       return;
@@ -92,6 +73,17 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen> {
         ..clear()
         ..addAll(entries);
       _loadingEntries = false;
+    });
+  }
+
+  void _showEntries(List<MoodEntry> entries) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _entries
+        ..clear()
+        ..addAll(entries);
     });
   }
 

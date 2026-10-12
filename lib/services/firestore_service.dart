@@ -6,10 +6,26 @@ import '../models/journal_entry.dart';
 import '../models/mood_entry.dart';
 import '../models/symptom_entry.dart';
 
+/// The result of a full collection read. [fromCache] is true when the SDK
+/// answered from its offline cache instead of the server, so the caller must
+/// not treat the read as a completed sync.
+class CloudRead<T> {
+  const CloudRead(this.entries, {required this.fromCache});
+
+  final List<T> entries;
+  final bool fromCache;
+}
+
 class FirestoreService {
   const FirestoreService({required this.enabled});
 
   final bool enabled;
+
+  /// The session sync reads must come from the server. With the default
+  /// source the SDK returns its cache when offline, which would look like a
+  /// successful sync and stop the retry. A server read throws instead (and
+  /// still refreshes the cache).
+  static const _serverOnly = GetOptions(source: Source.server);
 
   FirebaseFirestore get _db => FirebaseFirestore.instance;
 
@@ -36,17 +52,20 @@ class FirestoreService {
   // TODO: Add Firestore collections for diagnosed conditions, wellness goals,
   // privacy settings, onboarding state, and account deletion workflows.
 
-  Future<List<MoodEntry>> loadMoodEntries(String userId) async {
+  Future<CloudRead<MoodEntry>> loadMoodEntries(String userId) async {
     if (!enabled) {
-      return [];
+      return const CloudRead([], fromCache: false);
     }
 
     final snapshot = await _moods(
       userId,
-    ).orderBy('createdAt', descending: true).get();
-    return _decodeDocuments(
-      snapshot.docs.map((document) => document.data()),
-      MoodEntry.fromJson,
+    ).orderBy('createdAt', descending: true).get(_serverOnly);
+    return CloudRead(
+      _decodeDocuments(
+        snapshot.docs.map((document) => document.data()),
+        MoodEntry.fromJson,
+      ),
+      fromCache: snapshot.metadata.isFromCache,
     );
   }
 
@@ -58,17 +77,20 @@ class FirestoreService {
     await _moods(userId).doc(entry.id).set(entry.toJson());
   }
 
-  Future<List<SymptomEntry>> loadSymptomEntries(String userId) async {
+  Future<CloudRead<SymptomEntry>> loadSymptomEntries(String userId) async {
     if (!enabled) {
-      return [];
+      return const CloudRead([], fromCache: false);
     }
 
     final snapshot = await _symptoms(
       userId,
-    ).orderBy('createdAt', descending: true).get();
-    return _decodeDocuments(
-      snapshot.docs.map((document) => document.data()),
-      SymptomEntry.fromJson,
+    ).orderBy('createdAt', descending: true).get(_serverOnly);
+    return CloudRead(
+      _decodeDocuments(
+        snapshot.docs.map((document) => document.data()),
+        SymptomEntry.fromJson,
+      ),
+      fromCache: snapshot.metadata.isFromCache,
     );
   }
 
@@ -80,17 +102,20 @@ class FirestoreService {
     await _symptoms(userId).doc(entry.id).set(entry.toJson());
   }
 
-  Future<List<JournalEntry>> loadJournalEntries(String userId) async {
+  Future<CloudRead<JournalEntry>> loadJournalEntries(String userId) async {
     if (!enabled) {
-      return [];
+      return const CloudRead([], fromCache: false);
     }
 
     final snapshot = await _journals(
       userId,
-    ).orderBy('createdAt', descending: true).get();
-    return _decodeDocuments(
-      snapshot.docs.map((document) => document.data()),
-      JournalEntry.fromJson,
+    ).orderBy('createdAt', descending: true).get(_serverOnly);
+    return CloudRead(
+      _decodeDocuments(
+        snapshot.docs.map((document) => document.data()),
+        JournalEntry.fromJson,
+      ),
+      fromCache: snapshot.metadata.isFromCache,
     );
   }
 

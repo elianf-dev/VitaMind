@@ -13,6 +13,7 @@ import 'package:vitamind/services/encrypted_health_storage.dart';
 import 'package:vitamind/services/firestore_service.dart';
 import 'package:vitamind/services/local_storage_service.dart';
 import 'package:vitamind/services/notification_service.dart';
+import 'package:vitamind/services/sync_coordinator.dart';
 import 'package:vitamind/widgets/insights/daily_line_chart.dart';
 
 Future<LocalStorageService> _seededStorage() async {
@@ -52,6 +53,7 @@ Future<void> _pumpDashboard(WidgetTester tester, {bool tall = false}) async {
     VitaMindApp(
       authService: AuthService(firebaseAvailable: false),
       firestoreService: const FirestoreService(enabled: false),
+      syncCoordinator: SyncCoordinator(),
       localStorageService: await _seededStorage(),
       notificationService: NotificationService(),
       onboardingCompleted: true,

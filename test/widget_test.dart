@@ -10,6 +10,7 @@ import 'package:vitamind/services/encrypted_health_storage.dart';
 import 'package:vitamind/services/firestore_service.dart';
 import 'package:vitamind/services/local_storage_service.dart';
 import 'package:vitamind/services/notification_service.dart';
+import 'package:vitamind/services/sync_coordinator.dart';
 import 'package:vitamind/main.dart';
 
 void main() {
@@ -25,6 +26,7 @@ void main() {
       VitaMindApp(
         authService: AuthService(firebaseAvailable: false),
         firestoreService: const FirestoreService(enabled: false),
+        syncCoordinator: SyncCoordinator(),
         localStorageService: localStorageService,
         notificationService: NotificationService(),
       ),
@@ -155,6 +157,7 @@ void main() {
       VitaMindApp(
         authService: AuthService(firebaseAvailable: false),
         firestoreService: const FirestoreService(enabled: false),
+        syncCoordinator: SyncCoordinator(),
         localStorageService: LocalStorageService(
           preferences,
           MemoryHealthStorage(),

@@ -18,6 +18,7 @@ import 'package:vitamind/services/auth_service.dart';
 import 'package:vitamind/services/firestore_service.dart';
 import 'package:vitamind/services/local_storage_service.dart';
 import 'package:vitamind/services/notification_service.dart';
+import 'package:vitamind/services/sync_coordinator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,7 @@ Future<void> main() async {
     VitaMindApp(
       authService: AuthService(firebaseAvailable: false),
       firestoreService: const FirestoreService(enabled: false),
+      syncCoordinator: SyncCoordinator(),
       localStorageService: storage,
       notificationService: NotificationService(),
       onboardingCompleted: true,

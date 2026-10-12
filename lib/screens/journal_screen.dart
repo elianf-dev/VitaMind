@@ -4,11 +4,11 @@ import '../models/journal_entry.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/sync_coordinator.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
-import '../utils/entry_merge.dart';
 import '../widgets/empty_state_card.dart';
 import '../widgets/vita_mind_buttons.dart';
 import '../widgets/vita_mind_card.dart';
@@ -20,11 +20,13 @@ class JournalScreen extends StatefulWidget {
     required this.authService,
     required this.firestoreService,
     required this.localStorageService,
+    required this.syncCoordinator,
   });
 
   final AuthService authService;
   final FirestoreService firestoreService;
   final LocalStorageService localStorageService;
+  final SyncCoordinator syncCoordinator;
 
   @override
   State<JournalScreen> createState() => _JournalScreenState();
@@ -48,36 +50,14 @@ class _JournalScreenState extends State<JournalScreen> {
   }
 
   Future<void> _loadEntries() async {
-    final userId = widget.authService.userId;
-    final localEntries = await widget.localStorageService.loadJournalEntries();
-    var entries = localEntries;
-    if (userId != null && widget.firestoreService.enabled) {
-      try {
-        final cloudEntries = await widget.firestoreService.loadJournalEntries(
-          userId,
-        );
-        entries = mergeEntriesById(
-          localEntries: localEntries,
-          cloudEntries: cloudEntries,
-          idOf: (entry) => entry.id,
-          createdAtOf: (entry) => entry.createdAt,
-        );
-        await widget.localStorageService.saveJournalEntries(entries);
-
-        final cloudIds = cloudEntries.map((entry) => entry.id).toSet();
-        await Future.wait(
-          localEntries
-              .where((entry) => !cloudIds.contains(entry.id))
-              .map(
-                (entry) =>
-                    widget.firestoreService.saveJournalEntry(userId, entry),
-              ),
-        );
-      } on Object catch (error) {
-        debugPrint('VitaMind: failed to sync journal entries: $error');
-        // Keep the journal usable if Firestore is offline or rules need work.
-      }
-    }
+    // Renders local entries first. The full cloud read happens at most once
+    // per signed-in session (see SyncCoordinator); failures keep local data.
+    final entries = await widget.syncCoordinator.loadJournalEntries(
+      userId: widget.authService.userId,
+      firestoreService: widget.firestoreService,
+      localStorageService: widget.localStorageService,
+      onLocalLoaded: _showEntries,
+    );
 
     if (!mounted) {
       return;
@@ -88,6 +68,17 @@ class _JournalScreenState extends State<JournalScreen> {
         ..clear()
         ..addAll(entries);
       _loadingEntries = false;
+    });
+  }
+
+  void _showEntries(List<JournalEntry> entries) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _journalEntries
+        ..clear()
+        ..addAll(entries);
     });
   }
 

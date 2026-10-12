@@ -22,6 +22,7 @@ import 'services/firebase_bootstrap_service.dart';
 import 'services/firestore_service.dart';
 import 'services/local_storage_service.dart';
 import 'services/notification_service.dart';
+import 'services/sync_coordinator.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_spacing.dart';
 import 'theme/app_theme.dart';
@@ -55,6 +56,7 @@ Future<void> main() async {
     VitaMindApp(
       authService: authService,
       firestoreService: firestoreService,
+      syncCoordinator: SyncCoordinator(),
       localStorageService: localStorageService,
       notificationService: notificationService,
       onboardingCompleted: onboardingCompleted,
@@ -68,6 +70,7 @@ class VitaMindApp extends StatelessWidget {
     super.key,
     required this.authService,
     required this.firestoreService,
+    required this.syncCoordinator,
     required this.localStorageService,
     required this.notificationService,
     this.onboardingCompleted = false,
@@ -76,6 +79,7 @@ class VitaMindApp extends StatelessWidget {
 
   final AuthService authService;
   final FirestoreService firestoreService;
+  final SyncCoordinator syncCoordinator;
   final LocalStorageService localStorageService;
   final NotificationService notificationService;
   final bool onboardingCompleted;
@@ -120,12 +124,14 @@ class VitaMindApp extends StatelessWidget {
         '/dashboard': (context) => VitaMindShell(
           authService: authService,
           firestoreService: firestoreService,
+          syncCoordinator: syncCoordinator,
           localStorageService: localStorageService,
           notificationService: notificationService,
         ),
         '/symptoms': (context) => SymptomTrackerScreen(
           authService: authService,
           firestoreService: firestoreService,
+          syncCoordinator: syncCoordinator,
           localStorageService: localStorageService,
         ),
         '/health-log-explainer': (context) =>
@@ -151,6 +157,7 @@ class VitaMindShell extends StatefulWidget {
     super.key,
     required this.authService,
     required this.firestoreService,
+    required this.syncCoordinator,
     required this.localStorageService,
     required this.notificationService,
   });
@@ -159,6 +166,7 @@ class VitaMindShell extends StatefulWidget {
   final FirestoreService firestoreService;
   final LocalStorageService localStorageService;
   final NotificationService notificationService;
+  final SyncCoordinator syncCoordinator;
 
   @override
   State<VitaMindShell> createState() => _VitaMindShellState();
@@ -175,6 +183,8 @@ class _VitaMindShellState extends State<VitaMindShell> {
       HomeScreen(
         key: ValueKey('home-$_homeRefreshToken'),
         onNavigate: _setSelectedIndex,
+        // Rebuilds the Mood tab from local storage. SyncCoordinator has
+        // already done this session's cloud read, so this costs no reads.
         onMoodLogged: () => setState(() => _moodRefreshToken++),
         authService: widget.authService,
         firestoreService: widget.firestoreService,
@@ -185,11 +195,13 @@ class _VitaMindShellState extends State<VitaMindShell> {
         key: ValueKey('mood-$_moodRefreshToken'),
         authService: widget.authService,
         firestoreService: widget.firestoreService,
+        syncCoordinator: widget.syncCoordinator,
         localStorageService: widget.localStorageService,
       ),
       JournalScreen(
         authService: widget.authService,
         firestoreService: widget.firestoreService,
+        syncCoordinator: widget.syncCoordinator,
         localStorageService: widget.localStorageService,
       ),
       InsightsScreen(
@@ -199,6 +211,7 @@ class _VitaMindShellState extends State<VitaMindShell> {
       ProfileScreen(
         authService: widget.authService,
         firestoreService: widget.firestoreService,
+        syncCoordinator: widget.syncCoordinator,
         localStorageService: widget.localStorageService,
         notificationService: widget.notificationService,
       ),
