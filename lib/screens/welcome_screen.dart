@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../data/app_links.dart';
 import '../services/auth_service.dart';
 import '../services/check_in_restore.dart';
 import '../services/firestore_service.dart';
@@ -120,6 +122,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     });
   }
 
+  Future<void> _openPolicy(Uri url, String name) async {
+    bool opened;
+    try {
+      opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (error) {
+      debugPrint('Could not launch $url: $error');
+      opened = false;
+    }
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open $name. Visit $url')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -209,6 +226,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 widget.authService.firebaseAvailable,
                             onSubmit: _submitAuth,
                             onForgotPassword: _resetPassword,
+                            onOpenPolicy: _openPolicy,
                             onBack: () {
                               setState(() {
                                 _mode = _AuthMode.welcome;
@@ -304,6 +322,7 @@ class _AuthForm extends StatelessWidget {
     required this.firebaseAvailable,
     required this.onSubmit,
     required this.onForgotPassword,
+    required this.onOpenPolicy,
     required this.onBack,
   });
 
@@ -315,6 +334,7 @@ class _AuthForm extends StatelessWidget {
   final bool firebaseAvailable;
   final VoidCallback onSubmit;
   final VoidCallback onForgotPassword;
+  final void Function(Uri url, String name) onOpenPolicy;
   final VoidCallback onBack;
 
   @override
@@ -336,6 +356,33 @@ class _AuthForm extends StatelessWidget {
           const _AuthMessage(
             text:
                 "Used VitaMind as a guest? Those entries stay on this device and won't move to your new account.",
+          ),
+          const SizedBox(height: 12),
+          // Its own TalkBack stop, not merged into the form's other text.
+          Semantics(
+            container: true,
+            child: Text(
+              'With an account, your moods, symptoms, journal entries and reminder settings are stored in Google Firebase so they sync.',
+              style: AppTextStyles.cardBody(context),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 4,
+            children: [
+              _PolicyLink(
+                label: 'Privacy Policy',
+                onPressed: () =>
+                    onOpenPolicy(AppLinks.privacyPolicy, 'the privacy policy'),
+              ),
+              _PolicyLink(
+                label: 'Consumer Health Data Privacy Policy',
+                onPressed: () => onOpenPolicy(
+                  AppLinks.consumerHealthDataPolicy,
+                  'the Consumer Health Data Privacy Policy',
+                ),
+              ),
+            ],
           ),
         ],
         const SizedBox(height: 14),
@@ -392,6 +439,35 @@ class _AuthForm extends StatelessWidget {
           child: const Text('Back'),
         ),
       ],
+    );
+  }
+}
+
+/// A text link that opens a policy page in the browser. At least 48 x 48 dp.
+class _PolicyLink extends StatelessWidget {
+  const _PolicyLink({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    // A hint, not part of the label: TalkBack says "Privacy Policy, button,
+    // Opens in your browser" (DES-L1-1).
+    return MergeSemantics(
+      child: Semantics(
+        hint: 'Opens in your browser',
+        child: TextButton.icon(
+          onPressed: onPressed,
+          style: TextButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            alignment: Alignment.centerLeft,
+          ),
+          icon: const Icon(Icons.open_in_new, size: 18),
+          label: Text(label),
+        ),
+      ),
     );
   }
 }

@@ -351,6 +351,94 @@ void main() {
       handle.dispose();
     });
   }
+
+  testWidgets('Create account health-data notice and policy links are '
+      'labeled, tappable, and meet guidelines', (tester) async {
+    final handle = tester.ensureSemantics();
+    await _pumpCreateAccount(tester, tall: true);
+
+    expect(find.bySemanticsLabel(_firebaseNotice), findsOneWidget);
+    for (final label in _policyLinks) {
+      expect(
+        tester.getSemantics(find.bySemanticsLabel(label)),
+        isSemantics(
+          isButton: true,
+          hasTapAction: true,
+          isEnabled: true,
+          // A hint, so the label stays exactly the visible text.
+          label: label,
+          hint: 'Opens in your browser',
+        ),
+        reason: label,
+      );
+      final size = tester.getSize(find.widgetWithText(TextButton, label));
+      expect(size.width, greaterThanOrEqualTo(48), reason: label);
+      expect(size.height, greaterThanOrEqualTo(48), reason: label);
+    }
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(textContrastGuideline));
+    handle.dispose();
+  });
+
+  testWidgets('Create account form lays out at 2x text on a 360x690 phone', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearAllTestValues);
+    await _pumpCreateAccount(tester);
+    expect(tester.takeException(), isNull);
+
+    // Scroll through the whole form so every part is laid out.
+    final list = find.byType(Scrollable).first;
+    for (var i = 0; i < 12; i++) {
+      await tester.drag(list, const Offset(0, -300));
+      await tester.pump();
+      expect(tester.takeException(), isNull, reason: 'scroll step $i');
+    }
+    await tester.scrollUntilVisible(
+      find.text(_firebaseNotice),
+      -200,
+      scrollable: list,
+    );
+    expect(find.text(_firebaseNotice), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+}
+
+const _firebaseNotice =
+    'With an account, your moods, symptoms, journal entries and reminder '
+    'settings are stored in Google Firebase so they sync.';
+const _policyLinks = ['Privacy Policy', 'Consumer Health Data Privacy Policy'];
+
+/// Pumps the Welcome screen and opens Create account, on a 360 x 690 dp phone
+/// or a taller one so the whole form is built.
+Future<void> _pumpCreateAccount(
+  WidgetTester tester, {
+  bool tall = false,
+}) async {
+  tester.view.physicalSize = Size(1080, tall ? 6000 : 2070);
+  tester.view.devicePixelRatio = 3;
+  addTearDown(tester.view.reset);
+  SharedPreferences.setMockInitialValues({});
+
+  await tester.pumpWidget(
+    VitaMindApp(
+      authService: AuthService(firebaseAvailable: false),
+      firestoreService: const FirestoreService(enabled: false),
+      syncCoordinator: SyncCoordinator(),
+      localStorageService: LocalStorageService(
+        await SharedPreferences.getInstance(),
+        MemoryHealthStorage(),
+      ),
+      notificationService: NotificationService(),
+    ),
+  );
+  await _settle(tester);
+  await tester.ensureVisible(find.text('Sign up'));
+  await tester.pump();
+  await tester.tap(find.text('Sign up'));
+  await _settle(tester);
 }
 
 const _secondaryRoutes = [

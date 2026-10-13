@@ -131,15 +131,24 @@ class _PrivacySecuritySettingsScreenState
     );
   }
 
-  Future<void> _openPrivacyPolicy() async {
-    final opened = await launchUrl(
-      AppLinks.privacyPolicy,
-      mode: LaunchMode.externalApplication,
-    );
+  Future<void> _openPrivacyPolicy() =>
+      _openPolicy(AppLinks.privacyPolicy, 'the privacy policy');
+
+  Future<void> _openConsumerHealthDataPolicy() => _openPolicy(
+    AppLinks.consumerHealthDataPolicy,
+    'the Consumer Health Data Privacy Policy',
+  );
+
+  Future<void> _openPolicy(Uri url, String name) async {
+    bool opened;
+    try {
+      opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (error) {
+      debugPrint('Could not launch $url: $error');
+      opened = false;
+    }
     if (!opened && mounted) {
-      _showPlaceholder(
-        'Could not open the privacy policy. Visit ${AppLinks.privacyPolicy}',
-      );
+      _showPlaceholder('Could not open $name. Visit $url');
     }
   }
 
@@ -258,6 +267,25 @@ class _PrivacySecuritySettingsScreenState
                           semanticLabel: 'Opens in your browser',
                         ),
                         onTap: _openPrivacyPolicy,
+                      ),
+                      const Divider(height: 18),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          Icons.health_and_safety_outlined,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        title: const Text(
+                          'Consumer Health Data Privacy Policy',
+                        ),
+                        subtitle: const Text(
+                          'How we handle health data under Washington law.',
+                        ),
+                        trailing: const Icon(
+                          Icons.open_in_new,
+                          semanticLabel: 'Opens in your browser',
+                        ),
+                        onTap: _openConsumerHealthDataPolicy,
                       ),
                     ],
                   ),
