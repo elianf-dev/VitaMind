@@ -1,4 +1,6 @@
 import '../models/trusted_health_source.dart';
+import '../services/explainer/text_match.dart';
+import 'explainer_terms.dart';
 
 class TrustedHealthSources {
   const TrustedHealthSources._();
@@ -248,7 +250,13 @@ class TrustedHealthSources {
   }) {
     // TODO: Replace this static map with MedlinePlus Connect, CDC, openFDA,
     // and other official APIs after the MVP source-mapping flow is validated.
-    final combined = [symptoms, ...diagnosedConditions].join(' ').toLowerCase();
+    // Whole-word matching (A2): "ibs" must not match "ribs", "pain" must not
+    // match "Spain", and the generic "ache" must not match inside "headache".
+    final combined = normalizeForMatch(
+      [symptoms, ...diagnosedConditions].join(' '),
+    );
+    bool mentions(List<String> terms) => containsAnyTerm(combined, terms);
+
     final sources = <TrustedHealthSource>[
       medlinePlusHealthTopics,
       medlinePlusConnect,
@@ -261,39 +269,22 @@ class TrustedHealthSources {
       }
     }
 
-    final mentionsHeadache =
-        combined.contains('headache') || combined.contains('migraine');
-    final mentionsStress =
-        combined.contains('anxiety') || combined.contains('stress');
-    final mentionsDiabetes =
-        combined.contains('diabetes') || combined.contains('fatigue');
-    final mentionsAsthma =
-        combined.contains('asthma') ||
-        combined.contains('wheezing') ||
-        combined.contains('breath');
-    final mentionsPain =
-        combined.contains('pain') ||
-        combined.contains('ache') ||
-        combined.contains('arthritis');
-    final mentionsDigestive =
-        combined.contains('nausea') ||
-        combined.contains('vomit') ||
-        combined.contains('diarrhea') ||
-        combined.contains('stomach') ||
-        combined.contains('digestive') ||
-        combined.contains('ibs');
-    final mentionsTesticular =
-        combined.contains('testicle') ||
-        combined.contains('testicular') ||
-        combined.contains('scrotal') ||
-        combined.contains('groin pain');
+    final mentionsHeadache = mentions(ExplainerTerms.headacheOrMigraine);
+    final mentionsStress = mentions(ExplainerTerms.anxietyOrStress);
+    // Fatigue no longer maps to diabetes sources (A2); E1 gives it its own.
+    final mentionsDiabetes = mentions(ExplainerTerms.diabetes);
+    final mentionsAsthma = mentions(ExplainerTerms.asthma);
+    final mentionsPain = mentions(ExplainerTerms.pain);
+    final mentionsDigestive = mentions(ExplainerTerms.digestive);
+    final mentionsTesticular = mentions(ExplainerTerms.testicularSources);
+    final mentionsDepression = mentions(ExplainerTerms.depression);
 
     addIf(mentionsHeadache, headache);
-    addIf(combined.contains('migraine'), migraine);
+    addIf(mentions(ExplainerTerms.migraine), migraine);
     addIf(mentionsHeadache, americanMigraineFoundation);
     addIf(mentionsStress, anxiety);
     addIf(mentionsStress, nimhAnxiety);
-    addIf(combined.contains('stress'), stress);
+    addIf(mentions(ExplainerTerms.stress), stress);
     addIf(mentionsDiabetes, diabetes);
     addIf(mentionsDiabetes, niddkDiabetes);
     addIf(mentionsDiabetes, cdcDiabetes);
@@ -302,13 +293,13 @@ class TrustedHealthSources {
     addIf(mentionsAsthma, nhlbiAsthma);
     addIf(mentionsAsthma, cdcAsthma);
     addIf(mentionsAsthma, aafaAsthma);
-    addIf(combined.contains('depression'), depression);
-    addIf(combined.contains('depression'), nimhDepression);
+    addIf(mentionsDepression, depression);
+    addIf(mentionsDepression, nimhDepression);
     addIf(mentionsDigestive, nausea);
     addIf(mentionsDigestive, digestiveDiseases);
-    addIf(combined.contains('sleep'), sleepDisorders);
+    addIf(mentions(ExplainerTerms.sleep), sleepDisorders);
     addIf(mentionsPain, pain);
-    addIf(combined.contains('arthritis'), arthritis);
+    addIf(mentions(ExplainerTerms.arthritis), arthritis);
     addIf(mentionsTesticular, testiclePain);
     addIf(mentionsTesticular, mayoClinicTesticlePain);
     addIf(mentionsTesticular, clevelandClinicTesticularPain);

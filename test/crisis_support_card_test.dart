@@ -204,42 +204,31 @@ void main() {
         tester,
       ) async {
         _setSurface(tester, const Size(360, 690));
-        // Record layout errors instead of failing on the first one. The
-        // "In plain language" eyebrow row in the summary card below has a
-        // pre-existing overflow at 2x (not part of A1), so this test fails
-        // only on errors that come from the crisis card.
-        final errors = <FlutterErrorDetails>[];
-        final original = FlutterError.onError;
-        FlutterError.onError = errors.add;
-        try {
-          await _explain(tester, symptoms: _crisisSymptoms, textScale: scale);
+        // Strict (A2 fix round 1, QA-A2-2): any layout error anywhere on the
+        // screen fails this test, now that the heading overflow is fixed.
+        await _explain(tester, symptoms: _crisisSymptoms, textScale: scale);
+        expect(tester.takeException(), isNull);
 
-          final card = find.byType(CrisisSupportCard);
-          await _scrollTo(tester, card);
-          expect(card, findsOneWidget);
-          final cardRect = tester.getRect(card);
-          for (final label in ['Call 988', 'Text 988', 'Need help now']) {
-            final button = find.text(label);
-            await _scrollTo(tester, button);
-            final buttonRect = tester.getRect(
-              find.ancestor(
-                of: button,
-                matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
-              ),
-            );
-            final currentCard = tester.getRect(card);
-            expect(buttonRect.left, greaterThanOrEqualTo(currentCard.left));
-            expect(buttonRect.right, lessThanOrEqualTo(currentCard.right));
-            expect(buttonRect.height, greaterThanOrEqualTo(48), reason: label);
-          }
-          expect(cardRect.width, lessThanOrEqualTo(360));
-        } finally {
-          FlutterError.onError = original;
+        final card = find.byType(CrisisSupportCard);
+        await _scrollTo(tester, card);
+        expect(card, findsOneWidget);
+        final cardRect = tester.getRect(card);
+        for (final label in ['Call 988', 'Text 988', 'Need help now']) {
+          final button = find.text(label);
+          await _scrollTo(tester, button);
+          final buttonRect = tester.getRect(
+            find.ancestor(
+              of: button,
+              matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
+            ),
+          );
+          final currentCard = tester.getRect(card);
+          expect(buttonRect.left, greaterThanOrEqualTo(currentCard.left));
+          expect(buttonRect.right, lessThanOrEqualTo(currentCard.right));
+          expect(buttonRect.height, greaterThanOrEqualTo(48), reason: label);
         }
-        final cardErrors = errors.where(
-          (details) => details.toString().contains('crisis_support_card.dart'),
-        );
-        expect(cardErrors, isEmpty);
+        expect(cardRect.width, lessThanOrEqualTo(360));
+        expect(tester.takeException(), isNull);
       });
     }
 
@@ -437,5 +426,23 @@ void main() {
       expect(failureMessage(), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+  });
+
+  group('"In plain language" heading at large text (A2 criterion 11)', () {
+    for (final scale in [2.0, 3.0]) {
+      testWidgets('no overflow at text scale $scale on 360x690', (
+        tester,
+      ) async {
+        _setSurface(tester, const Size(360, 690));
+        await _explain(tester, symptoms: 'Headache', textScale: scale);
+
+        final heading = find.text('In plain language');
+        await _scrollTo(tester, heading);
+
+        expect(heading, findsOneWidget);
+        expect(find.byType(CrisisSupportCard), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }

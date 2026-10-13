@@ -1,6 +1,8 @@
+import '../data/explainer_terms.dart';
 import '../data/trusted_health_sources.dart';
 import '../models/health_log_request.dart';
 import '../models/health_log_response.dart';
+import 'explainer/text_match.dart';
 
 class HealthLogExplainerService {
   const HealthLogExplainerService();
@@ -13,6 +15,18 @@ class HealthLogExplainerService {
   }
 
   HealthLogResponse _buildRuleBasedResponse(HealthLogRequest request) {
+    final conditionNames = request.diagnosedConditions
+        .map((condition) => condition.name.trim())
+        .where((name) => name.isNotEmpty)
+        .toList();
+    // The crisis check runs first, before any keyword matching, on the raw
+    // lowercased text with its own substring phrase matching (unchanged).
+    final combinedText =
+        '${request.symptoms} ${request.doctorNotes} ${conditionNames.join(' ')}'
+            .toLowerCase();
+    final mentionsImmediateMentalHealthRisk =
+        _mentionsImmediateMentalHealthRisk(combinedText);
+
     final symptoms = request.symptoms.trim().isEmpty
         ? 'the symptoms you entered'
         : request.symptoms.trim();
@@ -22,18 +36,15 @@ class HealthLogExplainerService {
     final doctorNotes = request.doctorNotes.trim().isEmpty
         ? ''
         : ' You also added notes from a clinician: ${request.doctorNotes.trim()}';
-    final conditionNames = request.diagnosedConditions
-        .map((condition) => condition.name.trim())
-        .where((name) => name.isNotEmpty)
-        .toList();
     final activeGoals = request.wellnessGoals
         .where((goal) => goal.active)
         .map((goal) => goal.title.trim())
         .where((title) => title.isNotEmpty)
         .toList();
-    final combinedText =
-        '${request.symptoms} ${request.doctorNotes} ${conditionNames.join(' ')}'
-            .toLowerCase();
+    // Every other rule matches whole words only (A2), so "ribs" is not "ibs"
+    // and "Spain" is not "pain".
+    final matchText = normalizeForMatch(combinedText);
+    bool mentions(List<String> terms) => containsAnyTerm(matchText, terms);
 
     final relatedConditions = conditionNames.isEmpty
         ? <String>[
@@ -61,28 +72,27 @@ class HealthLogExplainerService {
       'If symptoms are mild and familiar, a calm pause, hydration, rest, or a lower-stimulation environment can help you observe patterns.',
     ];
 
-    if (combinedText.contains('headache') ||
-        combinedText.contains('migraine')) {
+    if (mentions(ExplainerTerms.headacheOrMigraine)) {
       copingStrategies.addAll(const [
         'For headache or migraine tracking, note sleep, hydration, stress, meals, screen time, light sensitivity, and possible triggers.',
         'Track whether the symptom improves, worsens, or changes after rest or lower light.',
       ]);
     }
 
-    if (combinedText.contains('anxiety') || combinedText.contains('stress')) {
+    if (mentions(ExplainerTerms.anxietyOrStress)) {
       copingStrategies.addAll(const [
         'For stress or anxiety, note triggers, grounding exercises, breathing practice, movement, and whether journaling helped.',
         'Consider tracking what support felt useful, such as routine, a quieter environment, or talking with someone trusted.',
       ]);
     }
 
-    if (combinedText.contains('diabetes') || combinedText.contains('fatigue')) {
+    if (mentions(ExplainerTerms.diabetes) || mentions(ExplainerTerms.fatigue)) {
       wellnessTips.add(
         'For diabetes or fatigue context, tracking meals, hydration, sleep, activity, and your usual care-plan routine may help a clinician conversation.',
       );
     }
 
-    if (combinedText.contains('sleep')) {
+    if (mentions(ExplainerTerms.sleep)) {
       wellnessTips.add(
         'For sleep-related logs, track bedtime, wake time, screens, caffeine, stress, naps, and how rested you felt.',
       );
@@ -95,21 +105,16 @@ class HealthLogExplainerService {
       'A pharmacist or prescriber can answer questions about medication timing, side effects, or changes.',
     ];
 
-    final mentionsImmediateMentalHealthRisk =
-        _mentionsImmediateMentalHealthRisk(combinedText);
-
-    if (combinedText.contains('headache') &&
-        (combinedText.contains('sudden') ||
-            combinedText.contains('worst headache'))) {
+    if (mentions(ExplainerTerms.headache) &&
+        (mentions(ExplainerTerms.sudden) ||
+            mentions(ExplainerTerms.worstHeadache))) {
       warningSigns.insert(
         0,
         'Seek urgent care for a sudden, extremely severe headache or a headache with confusion, fainting, weakness, trouble speaking, or vision loss.',
       );
     }
 
-    if (combinedText.contains('testicle') ||
-        combinedText.contains('testicular') ||
-        combinedText.contains('groin pain')) {
+    if (mentions(ExplainerTerms.testicle)) {
       warningSigns.insert(
         0,
         'Seek urgent care right away for sudden, severe, or worsening testicle pain, swelling, fever, nausea, vomiting, or pain after an injury.',
@@ -133,8 +138,7 @@ class HealthLogExplainerService {
         'Could a pharmacist or prescriber explain possible side effects or timing instructions for the medications I listed?',
     ];
 
-    if (combinedText.contains('headache') ||
-        combinedText.contains('migraine')) {
+    if (mentions(ExplainerTerms.headacheOrMigraine)) {
       doctorQuestions.add(
         'Should I track headache triggers such as sleep, hydration, food, stress, screen time, or light sensitivity?',
       );
@@ -178,14 +182,20 @@ class HealthLogExplainerService {
     return 'You listed: $cleanMedications. VitaMind does not give medication instructions. Ask a pharmacist or prescriber about purpose, side effects, timing, and what to do if symptoms change.';
   }
 
-  bool _soundsLikeSeveralDays(String duration) {
-    final lower = duration.toLowerCase();
-    return lower.contains('day') ||
-        lower.contains('week') ||
-        lower.contains('month') ||
-        lower.contains('ongoing') ||
-        lower.contains('persistent');
-  }
+  // Whole words only (A2): "today", "Monday" and "Tuesday" are not "day".
+  // A number joined to its unit ("3days", "2weeks") is split first
+  // (QA-A2-3), so it counts like "3 days".
+  bool _soundsLikeSeveralDays(String duration) => containsAnyTerm(
+    normalizeForMatch(
+      duration.replaceAllMapped(
+        _digitThenLetter,
+        (match) => '${match[1]} ${match[2]}',
+      ),
+    ),
+    ExplainerTerms.severalDays,
+  );
+
+  static final RegExp _digitThenLetter = RegExp(r'(\d)(\p{L})', unicode: true);
 
   static const List<String> _immediateMentalHealthRiskPhrases = [
     'suicide',
@@ -213,9 +223,26 @@ class HealthLogExplainerService {
     'better off dead',
   ];
 
+  // Any run of Unicode dashes (Pd, plus the minus sign), underscores or
+  // whitespace (including line breaks and non-breaking spaces).
+  static final RegExp _crisisSeparators = RegExp(
+    r'[\p{Pd}−_\s]+',
+    unicode: true,
+  );
+
   bool _mentionsImmediateMentalHealthRisk(String text) {
     // Phone keyboards often insert a curly apostrophe in "don’t".
     final normalized = text.replaceAll('’', "'");
-    return _immediateMentalHealthRiskPhrases.any(normalized.contains);
+    if (_immediateMentalHealthRiskPhrases.any(normalized.contains)) {
+      return true;
+    }
+    // SEC-A2-2: also check a copy with odd separators collapsed ("self  harm",
+    // "self–harm", "self_harm", "want to\ndie"). The phrase list and the
+    // check above are unchanged; this OR can only add matches.
+    final collapsed = text
+        .toLowerCase()
+        .replaceAll(RegExp('[’‘ʼ]'), "'")
+        .replaceAll(_crisisSeparators, ' ');
+    return _immediateMentalHealthRiskPhrases.any(collapsed.contains);
   }
 }

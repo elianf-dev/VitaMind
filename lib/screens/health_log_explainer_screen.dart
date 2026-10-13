@@ -372,9 +372,13 @@ class _PrimaryExplainerCard extends StatelessWidget {
             children: [
               const Icon(LucideIcons.sun, color: AppColors.coral, size: 18),
               const SizedBox(width: 8),
-              Text(
-                'In plain language',
-                style: AppTextStyles.eyebrow(color: AppColors.coral),
+              // Flexible lets the eyebrow wrap at large text sizes instead of
+              // overflowing the row (A2 / QA-A1-2).
+              Flexible(
+                child: Text(
+                  'In plain language',
+                  style: AppTextStyles.eyebrow(color: AppColors.coral),
+                ),
               ),
             ],
           ),
