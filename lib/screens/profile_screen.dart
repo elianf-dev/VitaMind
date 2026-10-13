@@ -89,6 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     widget.localStorageService.setProfileId(null);
     await widget.localStorageService.saveGuestSession(false);
+    await _clearFirestoreCache();
     if (!context.mounted) {
       return;
     }
@@ -130,11 +131,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await widget.localStorageService.clearLocalHealthData();
     await widget.notificationService.cancelAllCheckIns();
     widget.localStorageService.setProfileId(null);
+    // The cloud wipe and S2's sync settle are done, so nothing is in flight.
+    await _clearFirestoreCache();
 
     if (!mounted) {
       return;
     }
     Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+  }
+
+  /// Removes any Firestore cache files from the device (C-3, SEC-S2-4). A
+  /// failure is logged and never blocks logout, deletion or navigation.
+  Future<void> _clearFirestoreCache() async {
+    try {
+      await widget.firestoreService.clearDeviceCache();
+    } on Object catch (error) {
+      debugPrint('VitaMind: Firestore cache clear failed: $error');
+    }
   }
 
   /// Confirms the password, then deletes cloud data and the account. Returns

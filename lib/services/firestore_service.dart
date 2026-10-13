@@ -152,6 +152,38 @@ class FirestoreService {
     await _notificationSettings(userId).set(settings.toJson());
   }
 
+  /// The Firestore cache settings for this app: no on-disk cache (C-3). Hive
+  /// is the encrypted local store, and sync reads are server-only, so the
+  /// SDK cache would only leave an unencrypted copy of entries on the phone.
+  static const Settings deviceSettings = Settings(persistenceEnabled: false);
+
+  /// Wipes any Firestore cache files on this device (C-3, SEC-S2-4). Called
+  /// after Logout, account deletion and "Delete Data From This Device".
+  ///
+  /// `clearPersistence` only works on a stopped instance, so this terminates
+  /// the instance first; the next Firestore call starts a new one. The
+  /// settings are applied again before that next use. Never throws: a failed
+  /// clear must not block logout, deletion or navigation.
+  Future<void> clearDeviceCache() async {
+    if (!enabled) {
+      return;
+    }
+
+    try {
+      await _db.terminate();
+      await _db.clearPersistence();
+    } on Object catch (error) {
+      debugPrint(
+        'VitaMind: failed to clear the Firestore device cache: $error',
+      );
+    }
+    try {
+      _db.settings = deviceSettings;
+    } on Object catch (error) {
+      debugPrint('VitaMind: failed to re-apply Firestore settings: $error');
+    }
+  }
+
   Future<void> deleteUserData(String userId) async {
     if (!enabled) {
       return;

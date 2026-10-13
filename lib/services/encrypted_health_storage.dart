@@ -9,6 +9,13 @@ abstract interface class HealthStorage {
   Future<void> write(String key, String value);
 
   Future<void> delete(String key);
+
+  /// Removes every stored value, for every profile.
+  Future<void> clear();
+
+  /// Rewrites the store so deleted values no longer sit in the file
+  /// (SEC-L2-2).
+  Future<void> compact();
 }
 
 class EncryptedHealthStorage implements HealthStorage {
@@ -57,6 +64,18 @@ class EncryptedHealthStorage implements HealthStorage {
   Future<void> delete(String key) async {
     await _box.delete(key);
   }
+
+  @override
+  Future<void> clear() async {
+    await _box.clear();
+  }
+
+  /// Hive deletes by appending a tombstone, so old ciphertext stays in the
+  /// file until it is compacted.
+  @override
+  Future<void> compact() async {
+    await _box.compact();
+  }
 }
 
 class MemoryHealthStorage implements HealthStorage {
@@ -74,4 +93,13 @@ class MemoryHealthStorage implements HealthStorage {
   Future<void> delete(String key) async {
     _values.remove(key);
   }
+
+  @override
+  Future<void> clear() async {
+    _values.clear();
+  }
+
+  /// Nothing is kept after a delete in memory.
+  @override
+  Future<void> compact() async {}
 }

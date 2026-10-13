@@ -114,8 +114,11 @@ class VitaMindApp extends StatelessWidget {
           isOnboarding: true,
         ),
         '/onboarding/privacy': (context) => PrivacySecurityScreen(
+          authService: authService,
+          syncCoordinator: syncCoordinator,
           localStorageService: localStorageService,
           notificationService: notificationService,
+          firestoreService: firestoreService,
         ),
         '/onboarding/summary': (context) => OnboardingSummaryScreen(
           localStorageService: localStorageService,
@@ -143,8 +146,11 @@ class VitaMindApp extends StatelessWidget {
         '/wellness-goals': (context) =>
             WellnessGoalsScreen(localStorageService: localStorageService),
         '/privacy-security': (context) => PrivacySecuritySettingsScreen(
+          authService: authService,
+          syncCoordinator: syncCoordinator,
           localStorageService: localStorageService,
           notificationService: notificationService,
+          firestoreService: firestoreService,
         ),
         SupportScreen.routeName: (context) => const SupportScreen(),
       },

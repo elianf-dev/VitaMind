@@ -259,6 +259,35 @@ class LocalStorageService {
       _removeHealthString(_healthLogEntriesKey),
       _removeHealthString(_legacyAiHealthLogsKey),
     ]);
+    await _compactHealthStorage();
+  }
+
+  /// Drops deleted ciphertext from the encrypted file (SEC-L2-2). A failure
+  /// is logged: the data is already deleted from the store's point of view.
+  Future<void> _compactHealthStorage() async {
+    try {
+      await _healthStorage.compact();
+    } on Object catch (error) {
+      debugPrint('VitaMind: failed to compact local health storage: $error');
+    }
+  }
+
+  /// Removes VitaMind data for every profile on this device: guest, every
+  /// signed-in uid used here, and the legacy unscoped guest keys (C-4,
+  /// SEC-S1-02). Only "Delete Data From This Device" calls this; account
+  /// deletion keeps the per-profile [clearLocalHealthData].
+  ///
+  /// The encrypted box holds only VitaMind health data, so it is cleared
+  /// whole. In preferences every `vitamind.` key goes except the device-wide
+  /// guest session flag; other keys are left alone.
+  Future<void> clearAllLocalHealthData() async {
+    await _healthStorage.clear();
+    final keys = _preferences
+        .getKeys()
+        .where((key) => key.startsWith('vitamind.') && key != _guestSessionKey)
+        .toList();
+    await Future.wait(keys.map(_preferences.remove));
+    await _compactHealthStorage();
   }
 
   String _scopedKey(String key) {

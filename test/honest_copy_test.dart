@@ -88,8 +88,11 @@ void main() {
       await _pumpScreen(
         tester,
         PrivacySecuritySettingsScreen(
+          authService: AuthService(firebaseAvailable: false),
+          syncCoordinator: SyncCoordinator(),
           localStorageService: storage,
           notificationService: notifications,
+          firestoreService: const FirestoreService(enabled: false),
         ),
       );
       expect(find.text('Gentle daily check-ins'), findsOneWidget);
@@ -168,8 +171,11 @@ void main() {
       await _pumpScreen(
         tester,
         PrivacySecuritySettingsScreen(
+          authService: AuthService(firebaseAvailable: false),
+          syncCoordinator: SyncCoordinator(),
           localStorageService: storage,
           notificationService: NotificationService(),
+          firestoreService: const FirestoreService(enabled: false),
         ),
       );
 
@@ -315,8 +321,11 @@ void main() {
       await _pumpScreen(
         tester,
         PrivacySecuritySettingsScreen(
+          authService: AuthService(firebaseAvailable: false),
+          syncCoordinator: SyncCoordinator(),
           localStorageService: await _storage(),
           notificationService: NotificationService(),
+          firestoreService: const FirestoreService(enabled: false),
         ),
       );
 

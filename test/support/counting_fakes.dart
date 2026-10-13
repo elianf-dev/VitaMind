@@ -3,7 +3,10 @@ import 'package:vitamind/models/journal_entry.dart';
 import 'package:vitamind/models/mood_entry.dart';
 import 'package:vitamind/models/symptom_entry.dart';
 import 'package:vitamind/services/auth_service.dart';
+import 'package:vitamind/services/encrypted_health_storage.dart';
 import 'package:vitamind/services/firestore_service.dart';
+import 'package:vitamind/services/local_storage_service.dart';
+import 'package:vitamind/services/notification_service.dart';
 
 /// An [AuthService] that reports a fixed signed-in user without Firebase.
 class FakeSignedInAuth extends AuthService {
@@ -62,6 +65,14 @@ class CountingFirestoreService extends FirestoreService {
 
   final Map<String, int> reads = {};
   final Map<String, int> writes = {};
+
+  /// Order of [deleteUserData] and [clearDeviceCache] calls.
+  final List<String> events = [];
+
+  int clearDeviceCacheCalls = 0;
+
+  /// Makes [clearDeviceCache] throw, to check callers never depend on it.
+  bool throwOnClearDeviceCache = false;
 
   int readsOf(String collection) => reads[collection] ?? 0;
   int writesOf(String collection) => writes[collection] ?? 0;
@@ -136,10 +147,67 @@ class CountingFirestoreService extends FirestoreService {
   }
 
   @override
+  Future<void> clearDeviceCache() async {
+    clearDeviceCacheCalls++;
+    events.add('clearDeviceCache');
+    if (throwOnClearDeviceCache) {
+      throw StateError('cache clear failed');
+    }
+  }
+
+  @override
   Future<void> deleteUserData(String userId) async {
     onDeleteUserData?.call(userId);
+    events.add('deleteUserData');
     moods.remove(userId);
     symptoms.remove(userId);
     journals.remove(userId);
+  }
+}
+
+/// A [LocalStorageService] that counts the two wipe calls.
+class CountingLocalStorageService extends LocalStorageService {
+  CountingLocalStorageService(super.preferences, super.healthStorage);
+
+  int clearAllCalls = 0;
+  int clearProfileCalls = 0;
+
+  @override
+  Future<void> clearAllLocalHealthData() {
+    clearAllCalls++;
+    return super.clearAllLocalHealthData();
+  }
+
+  @override
+  Future<void> clearLocalHealthData() {
+    clearProfileCalls++;
+    return super.clearLocalHealthData();
+  }
+}
+
+/// A [MemoryHealthStorage] that counts [compact] calls and can make it throw.
+class CountingHealthStorage extends MemoryHealthStorage {
+  int compactCalls = 0;
+  bool throwOnCompact = false;
+
+  @override
+  Future<void> compact() async {
+    compactCalls++;
+    if (throwOnCompact) {
+      throw StateError('compact failed');
+    }
+  }
+}
+
+/// A [NotificationService] that skips the platform plugin.
+class QuietNotificationService extends NotificationService {
+  int cancelCalls = 0;
+
+  @override
+  Future<void> applyCheckInSettings(CheckInSettings settings) async {}
+
+  @override
+  Future<void> cancelAllCheckIns() async {
+    cancelCalls++;
   }
 }

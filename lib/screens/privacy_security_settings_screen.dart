@@ -4,8 +4,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/app_links.dart';
 import '../models/check_in_settings.dart';
 import '../models/privacy_security_settings.dart';
+import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/notification_service.dart';
+import '../services/sync_coordinator.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/disclaimer_card.dart';
@@ -16,13 +20,19 @@ import '../widgets/vita_mind_page_header.dart';
 class PrivacySecuritySettingsScreen extends StatefulWidget {
   const PrivacySecuritySettingsScreen({
     super.key,
+    required this.authService,
+    required this.syncCoordinator,
     required this.localStorageService,
     required this.notificationService,
+    required this.firestoreService,
     this.isOnboarding = false,
   });
 
+  final AuthService authService;
+  final SyncCoordinator syncCoordinator;
   final LocalStorageService localStorageService;
   final NotificationService notificationService;
+  final FirestoreService firestoreService;
   final bool isOnboarding;
 
   @override
@@ -93,9 +103,22 @@ class _PrivacySecuritySettingsScreenState
       context: context,
       animationStyle: AppMotion.overlay(context),
       builder: (context) => AlertDialog(
+        // Long copy at large text sizes scrolls instead of clipping
+        // (DES-L2-1).
+        scrollable: true,
         title: const Text('Delete local VitaMind data?'),
-        content: const Text(
-          'This clears this profile’s moods, symptoms, journals, diagnosed conditions, goals, privacy choices, and reminders from this device. Signed-in records already saved to Firebase are not deleted.',
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This deletes all VitaMind moods, symptoms, journals, conditions, medications, goals, privacy choices and reminders on this device, for every profile used here, including guest entries. This can’t be undone, and you’ll see the welcome setup again.',
+            ),
+            SizedBox(height: AppSpacing.sm),
+            Text(
+              'Entries already synced to an account stay in the cloud and come back the next time you open VitaMind signed in. To remove those, delete the account.',
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -104,6 +127,11 @@ class _PrivacySecuritySettingsScreenState
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
+            // Same destructive style as Delete Account (DES-L2-2).
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Delete From Device'),
           ),
         ],
@@ -114,8 +142,27 @@ class _PrivacySecuritySettingsScreenState
       return;
     }
 
-    await widget.localStorageService.clearLocalHealthData();
+    // Stop a running sync for the signed-in user first, so it can't write
+    // wiped entries back into the cleared store (SEC-L2-1). Never blocks.
+    final userId = widget.authService.userId;
+    if (userId != null) {
+      try {
+        await widget.syncCoordinator.clearUserAndSettle(userId);
+      } on Object catch (error) {
+        debugPrint('VitaMind: failed to settle sync before wipe: $error');
+      }
+    }
+
+    // Every profile on the device, guest included (C-4, SEC-S1-02).
+    await widget.localStorageService.clearAllLocalHealthData();
     await widget.notificationService.cancelAllCheckIns();
+    // Any Firestore cache files too (C-3); a no-op cost for guests. A failure
+    // never blocks the wipe.
+    try {
+      await widget.firestoreService.clearDeviceCache();
+    } on Object catch (error) {
+      debugPrint('VitaMind: Firestore cache clear failed: $error');
+    }
 
     if (!mounted) {
       return;
@@ -181,20 +228,18 @@ class _PrivacySecuritySettingsScreenState
                         contentPadding: EdgeInsets.zero,
                         leading: Icon(Icons.lock_outline),
                         title: Text('App lock'),
-                        subtitle: Text(
+                        subtitle: _UnavailableSubtitle(
                           'Coming later. This control is unavailable until an unlock screen is implemented.',
                         ),
-                        trailing: Text('Not available'),
                       ),
                       const Divider(height: 18),
                       const ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: Icon(Icons.fingerprint),
                         title: Text('Biometric unlock'),
-                        subtitle: Text(
+                        subtitle: _UnavailableSubtitle(
                           'Coming later with Face ID, Touch ID, and Android biometrics.',
                         ),
-                        trailing: Text('Not available'),
                       ),
                       const Divider(height: 18),
                       SwitchListTile(
@@ -238,10 +283,9 @@ class _PrivacySecuritySettingsScreenState
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         title: const Text('Data export'),
-                        subtitle: const Text(
+                        subtitle: const _UnavailableSubtitle(
                           'Coming later. VitaMind does not currently create an export file.',
                         ),
-                        trailing: const Text('Not available'),
                         onTap: () {
                           // TODO: Add a user-controlled encrypted health data export.
                           _showPlaceholder('Data export will be added later.');
@@ -307,6 +351,33 @@ class _PrivacySecuritySettingsScreenState
                 ],
               ),
       ),
+    );
+  }
+}
+
+/// A tile subtitle with "Not available" on its own line, so the label wraps
+/// with large text instead of filling the tile as a trailing widget did
+/// (QA-L1-2). It keeps the ListTile trailing-text style it had before.
+class _UnavailableSubtitle extends StatelessWidget {
+  const _UnavailableSubtitle(this.description);
+
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(description),
+        const SizedBox(height: 4),
+        Text(
+          'Not available',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }
