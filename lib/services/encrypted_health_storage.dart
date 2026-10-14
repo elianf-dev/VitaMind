@@ -52,6 +52,34 @@ class EncryptedHealthStorage implements HealthStorage {
     return EncryptedHealthStorage._(box);
   }
 
+  /// Startup recovery (S4): deletes the encrypted box file and its stored
+  /// key, so the next [create] starts with an empty store and a new key.
+  /// Each step is tried even if the other fails; the first error is
+  /// rethrown afterwards so the caller can log it.
+  static Future<void> deleteLocalStore() async {
+    Object? firstError;
+    StackTrace? firstStack;
+
+    try {
+      await Hive.initFlutter('vitamind');
+      await Hive.deleteBoxFromDisk(_boxName);
+    } on Object catch (error, stack) {
+      firstError ??= error;
+      firstStack ??= stack;
+    }
+
+    try {
+      await _secureStorage.delete(key: _encryptionKeyName);
+    } on Object catch (error, stack) {
+      firstError ??= error;
+      firstStack ??= stack;
+    }
+
+    if (firstError != null) {
+      Error.throwWithStackTrace(firstError, firstStack!);
+    }
+  }
+
   @override
   String? read(String key) => _box.get(key);
 

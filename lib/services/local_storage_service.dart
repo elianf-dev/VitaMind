@@ -41,6 +41,14 @@ class LocalStorageService {
     return LocalStorageService(preferences, healthStorage);
   }
 
+  /// Startup recovery (S4) for when [create] fails: deletes the encrypted
+  /// health box and its key. Preferences (sign-in state, onboarding flags)
+  /// are kept, so a signed-in user's synced entries come back on the next
+  /// cloud read.
+  static Future<void> resetLocalStore() {
+    return EncryptedHealthStorage.deleteLocalStore();
+  }
+
   void setProfileId(String? profileId) {
     final trimmedProfileId = profileId?.trim();
     _profileId = trimmedProfileId == null || trimmedProfileId.isEmpty

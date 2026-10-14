@@ -23,16 +23,32 @@ import 'services/firestore_service.dart';
 import 'services/local_storage_service.dart';
 import 'services/notification_service.dart';
 import 'services/sync_coordinator.dart';
+import 'startup_gate.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_spacing.dart';
 import 'theme/app_theme.dart';
 import 'widgets/app_backdrop.dart';
 import 'widgets/glass_surface.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  // Keep the native splash up until there is real content (the app or the
+  // recovery screen), as when startup ran before runApp.
+  binding.deferFirstFrame();
 
-  final localStorageService = await LocalStorageService.create();
+  runApp(
+    StartupGate(
+      storageFactory: LocalStorageService.create,
+      resetLocalData: LocalStorageService.resetLocalStore,
+      launchApp: launchVitaMind,
+      onFirstContent: binding.allowFirstFrame,
+    ),
+  );
+}
+
+/// Everything after local storage opens. A failure here also lands on the
+/// recovery screen; a Firebase failure does not, it falls back to guest-only.
+Future<Widget> launchVitaMind(LocalStorageService localStorageService) async {
   final firebaseAvailable = await const FirebaseBootstrapService().initialize();
   final authService = AuthService(firebaseAvailable: firebaseAvailable);
   await authService.initialize();
@@ -52,16 +68,14 @@ Future<void> main() async {
     notificationService: notificationService,
   );
 
-  runApp(
-    VitaMindApp(
-      authService: authService,
-      firestoreService: firestoreService,
-      syncCoordinator: SyncCoordinator(),
-      localStorageService: localStorageService,
-      notificationService: notificationService,
-      onboardingCompleted: onboardingCompleted,
-      guestSessionActive: guestSessionActive,
-    ),
+  return VitaMindApp(
+    authService: authService,
+    firestoreService: firestoreService,
+    syncCoordinator: SyncCoordinator(),
+    localStorageService: localStorageService,
+    notificationService: notificationService,
+    onboardingCompleted: onboardingCompleted,
+    guestSessionActive: guestSessionActive,
   );
 }
 

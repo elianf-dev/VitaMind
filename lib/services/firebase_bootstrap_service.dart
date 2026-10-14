@@ -6,13 +6,20 @@ import '../firebase_options.dart';
 import 'firestore_service.dart';
 
 class FirebaseBootstrapService {
-  const FirebaseBootstrapService();
+  const FirebaseBootstrapService({this.initializeApp = _initializeDefaultApp});
+
+  /// Starts the Firebase app. Injectable so tests can make it fail.
+  final Future<void> Function() initializeApp;
+
+  static Future<void> _initializeDefaultApp() async {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
 
   Future<bool> initialize() async {
     try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      await initializeApp();
     } on Object catch (error) {
       debugPrint('VitaMind: Firebase failed to initialize: $error');
       // Guest mode remains available when Firebase cannot initialize.
