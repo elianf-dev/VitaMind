@@ -63,6 +63,44 @@ Firebase AI function has been removed. TODO comments mark possible future
 VitaMind Plus AI, payments, cloud sync expansion, and deeper trusted-source API
 integrations.
 
+## Release builds
+
+Android release builds (`flutter build appbundle --release`, release APKs and
+`flutter run --release`) must be signed with the upload key. They are never
+signed with debug keys: if the key isn't set up, the build stops at
+`:app:checkReleaseSigning` with "Release signing is not set up". Debug builds
+(`flutter run`) don't need any of this.
+
+Prerequisites:
+
+1. The upload keystore, kept outside the repo (alias `upload`). Back it up
+   somewhere offline; losing it means asking Google for an upload-key reset.
+2. `android/key.properties` (git-ignored, never commit it) with all four
+   values:
+
+   ```properties
+   storeFile=C:/path/to/upload-keystore.jks
+   storePassword=...
+   keyAlias=upload
+   keyPassword=...
+   ```
+
+   `storeFile` must point to an existing file. A missing file, a missing
+   value or a wrong path all fail the release build with a message saying
+   which.
+3. A JDK 17 for Gradle (`flutter config --jdk-dir <jdk-17>`).
+4. A `version:` in `pubspec.yaml` whose build number (after `+`) is higher
+   than any bundle already uploaded to Play.
+
+Build and check the signer:
+
+```sh
+flutter build appbundle --release
+keytool -printcert -jarfile build/app/outputs/bundle/release/app-release.aab
+```
+
+The certificate should be the upload key's, not `CN=Android Debug`.
+
 ## Build Compatibility
 
 This project uses CocoaPods for Apple plugins because Firebase's newest Swift
